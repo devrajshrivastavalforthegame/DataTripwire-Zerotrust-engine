@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 
 from app.services import behaviour_analysis_service
 from app.assessment_service import security_assessment_service
+from app.models.response import AnalyzeResponse
 
 
 app = FastAPI(
@@ -190,7 +191,7 @@ def analyze_behaviour(data: AnalyzeRequest):
     }
 
 
-@app.post("/api/v1/analyze")
+@app.post("/api/v1/analyze", response_model=AnalyzeResponse)
 def analyze(data: AnalyzeRequest):
     result = analyze_behaviour(data)
 

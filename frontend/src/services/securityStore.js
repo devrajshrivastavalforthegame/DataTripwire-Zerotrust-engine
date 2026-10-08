@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { api } from "../api";
 
 const STORAGE_KEY = "datatripwire.security.console.v1";
 
@@ -54,11 +55,11 @@ export const securityStore={
   getState:()=>state,
   subscribe:(fn)=>{listeners.add(fn);return()=>listeners.delete(fn);},
   reset:()=>mutate(()=>structuredClone(seed)),
-  toggleResource:(id)=>mutate(s=>({...s,resources:s.resources.map(r=>r.id===id?{...r,protection:!r.protection}:r)})),
-  updateIncident:(id,status)=>mutate(s=>({...s,incidents:s.incidents.map(i=>i.id===id?{...i,status}:i)})),
-  togglePolicy:(id)=>mutate(s=>({...s,policies:s.policies.map(p=>p.id===id?{...p,enabled:!p.enabled,version:p.version+1}:p)})),
+  toggleResource:(id)=>{const current=state.resources.find(r=>r.id===id); if(current) api.updateSecurityResource(id,{protected:!current.protection}).catch(()=>{}); return mutate(s=>({...s,resources:s.resources.map(r=>r.id===id?{...r,protection:!r.protection}:r)}));},
+  updateIncident:(id,status)=>{api.updateIncident(id,status).catch(()=>{});return mutate(s=>({...s,incidents:s.incidents.map(i=>i.id===id?{...i,status}:i)}));},
+  togglePolicy:(id)=>{const p=state.policies.find(x=>x.id===id);if(p)api.updatePolicy(p.id,{enabled:!p.enabled}).catch(()=>{});return mutate(s=>({...s,policies:s.policies.map(p=>p.id===id?{...p,enabled:!p.enabled,version:p.version+1}:p)}));},
   updatePermission:(roleId,key)=>mutate(s=>({...s,roles:s.roles.map(r=>r.id===roleId?{...r,permissions:{...r.permissions,[key]:!r.permissions[key]}}:r)})),
-  executeResponse:(id,decision)=>mutate(s=>{
+  executeResponse:(id,decision)=>{const response=state.responses.find(r=>r.id===id);if(response)api.executeResponse(response.session_id||response.id,decision).catch(()=>{});return mutate(s=>{
     const response=s.responses.find(r=>r.id===id);
     if(!response)return s;
     const status=decision==="BLOCK"||decision==="RESTRICT"?"Enforced":decision==="VERIFY"?"Awaiting user":"Monitoring";
@@ -68,7 +69,7 @@ export const securityStore={
       responses:s.responses.map(r=>r.id===id?{...r,decision,status}:r),
       audit:[{id:eventId,time:new Date().toLocaleTimeString([], {hour12:false}),actor:"Security Manager",action:decision,target:response.user+" / "+response.resource,result:status,severity},...s.audit].slice(0,50)
     };
-  }),
+  });},
   updateSetting:(key,value)=>mutate(s=>({...s,settings:{...s.settings,[key]:value}}))
 };
 

@@ -66,3 +66,10 @@ class Policy(Base):
     scope: Mapped[str]=mapped_column(String(160))
     enabled: Mapped[bool]=mapped_column(Boolean,default=True)
     version: Mapped[int]=mapped_column(Integer,default=1)
+
+class WorkspaceState(Base):
+    __tablename__="workspace_states"
+    id: Mapped[int]=mapped_column(Integer,primary_key=True)
+    user_id: Mapped[int]=mapped_column(Integer,index=True,unique=True)
+    data: Mapped[str]=mapped_column(Text,default="{}")
+    updated_at: Mapped[datetime]=mapped_column(DateTime(timezone=True),default=lambda:datetime.now(timezone.utc))

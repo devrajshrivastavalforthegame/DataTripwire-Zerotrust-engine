@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel, Field
 
 from app.services import behaviour_analysis_service
+from app.assessment_service import security_assessment_service
 
 
 app = FastAPI(
@@ -167,6 +168,15 @@ def analyze_behaviour(data: AnalyzeRequest):
         0.70 + (len(signals) * 0.04),
     )
 
+    assessment = security_assessment_service.build_assessment(
+        risk_level=risk_level,
+        anomaly_score=anomaly_score,
+        confidence=confidence,
+        baseline_score=ml_analysis["baseline_deviation"]["score"],
+        signals=signals,
+        recommendation=recommendation,
+    )
+
     return {
         "risk_level": risk_level,
         "anomaly_score": round(anomaly_score, 4),
@@ -176,6 +186,7 @@ def analyze_behaviour(data: AnalyzeRequest):
         "signals": signals,
         "explanation": explanation,
         "recommendation": recommendation,
+        "assessment": assessment,
     }
 
 

@@ -27,7 +27,7 @@ async def row_for(user,db):
         row=WorkspaceState(user_id=user.id,data=json.dumps(DEFAULT),updated_at=datetime.now(timezone.utc)); db.add(row); await db.commit(); await db.refresh(row)
     return row
 
-class Action(BaseModel):
+class WorkspaceActionPayload(BaseModel):
     action:str=Field(min_length=1,max_length=120)
     target:str|None=None
     metadata:dict=dict
@@ -48,7 +48,7 @@ async def update_state(payload:StatePatch,user:User=Depends(get_current_user),db
     return {"data":data,"updated_at":row.updated_at.isoformat()}
 
 @router.post("/actions")
-async def action(payload:Action,user:User=Depends(get_current_user),db:AsyncSession=Depends(get_db)):
+async def action(payload:WorkspaceActionPayload,user:User=Depends(get_current_user),db:AsyncSession=Depends(get_db)):
     event_id="wsevt-"+uuid4().hex
     db.add(AuditEvent(event_id=event_id,user_id=user.id,session_id=None,action="WORKSPACE:"+payload.action,resource=payload.target or "workspace",sensitivity="Internal",risk_score=0,decision="ALLOW",result="RECORDED",severity="LOW",explanation="Workspace control action recorded.",signals=json.dumps(payload.metadata)))
     await db.commit()

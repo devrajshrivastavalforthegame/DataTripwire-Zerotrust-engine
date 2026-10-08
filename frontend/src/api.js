@@ -14,6 +14,8 @@ export const api={
   health:()=>request(API_BASE_URL+"/health"),
   login:async(payload)=>{const body=await request(API_BASE_URL+"/api/v1/auth/login",{method:"POST",body:JSON.stringify(payload)});localStorage.setItem(AUTH_KEY,body.access_token);localStorage.setItem("datatripwire.user.v1",JSON.stringify(body.user));return body},
   me:()=>request(API_BASE_URL+"/api/v1/auth/me"),
+  adminUsers:()=>request(API_BASE_URL+"/api/v1/admin/users"),
+  adminRoles:()=>request(API_BASE_URL+"/api/v1/admin/roles"),
   logout:()=>{localStorage.removeItem(AUTH_KEY);localStorage.removeItem("datatripwire.user.v1")},
   resources:()=>request(API_BASE_URL+"/api/v1/resources"),
   accessResource:(id,payload)=>request(API_BASE_URL+"/api/v1/resources/"+id+"/access",{method:"POST",body:JSON.stringify(payload)}),

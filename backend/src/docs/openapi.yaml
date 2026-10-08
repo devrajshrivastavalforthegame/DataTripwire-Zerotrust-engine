@@ -18,7 +18,10 @@
           "200": {
             "description": "OK"
           }
-        }
+        },
+        "tags": [
+          "Health"
+        ]
       }
     },
     "/health/db": {
@@ -31,7 +34,10 @@
           "503": {
             "description": "Database unavailable"
           }
-        }
+        },
+        "tags": [
+          "Health"
+        ]
       }
     },
     "/api/v1/auth/login": {
@@ -73,7 +79,10 @@
           "401": {
             "description": "Invalid credentials"
           }
-        }
+        },
+        "tags": [
+          "Authentication"
+        ]
       }
     },
     "/api/v1/auth/me": {
@@ -88,7 +97,10 @@
           "200": {
             "description": "OK"
           }
-        }
+        },
+        "tags": [
+          "Authentication"
+        ]
       }
     },
     "/api/v1/auth/logout": {
@@ -103,7 +115,10 @@
           "200": {
             "description": "OK"
           }
-        }
+        },
+        "tags": [
+          "Authentication"
+        ]
       }
     },
     "/api/v1/behavior": {
@@ -121,7 +136,10 @@
           "400": {
             "description": "Validation error"
           }
-        }
+        },
+        "tags": [
+          "Behavior & Risk"
+        ]
       }
     },
     "/api/v1/security/baseline": {
@@ -136,7 +154,10 @@
           "200": {
             "description": "Baseline"
           }
-        }
+        },
+        "tags": [
+          "Baseline"
+        ]
       }
     },
     "/api/v1/security/baseline/rebuild": {
@@ -154,7 +175,10 @@
           "403": {
             "description": "Session not active"
           }
-        }
+        },
+        "tags": [
+          "Baseline"
+        ]
       }
     },
     "/api/v1/security/finance/archive/backup": {
@@ -169,7 +193,10 @@
           "200": {
             "description": "Decoy event processed"
           }
-        }
+        },
+        "tags": [
+          "Deception"
+        ]
       }
     },
     "/api/v1/security/sessions": {
@@ -184,7 +211,10 @@
           "200": {
             "description": "Sessions"
           }
-        }
+        },
+        "tags": [
+          "SOC & Monitoring"
+        ]
       }
     },
     "/api/v1/security/sessions/{sessionId}/timeline": {
@@ -210,7 +240,10 @@
           "200": {
             "description": "Timeline"
           }
-        }
+        },
+        "tags": [
+          "SOC & Monitoring"
+        ]
       }
     },
     "/api/v1/security/audit": {
@@ -225,7 +258,10 @@
           "200": {
             "description": "Audit logs"
           }
-        }
+        },
+        "tags": [
+          "SOC & Monitoring"
+        ]
       }
     }
   },
@@ -237,5 +273,31 @@
         "bearerFormat": "JWT"
       }
     }
-  }
+  },
+  "tags": [
+    {
+      "name": "Health",
+      "description": "Backend and database health checks"
+    },
+    {
+      "name": "Authentication",
+      "description": "Identity, session authentication and logout"
+    },
+    {
+      "name": "Behavior & Risk",
+      "description": "Behavior telemetry, risk scoring and security decisions"
+    },
+    {
+      "name": "Baseline",
+      "description": "User behavior baseline management"
+    },
+    {
+      "name": "Deception",
+      "description": "Controlled deception resources and security tripwires"
+    },
+    {
+      "name": "SOC & Monitoring",
+      "description": "Security sessions, timelines and audit visibility"
+    }
+  ]
 }

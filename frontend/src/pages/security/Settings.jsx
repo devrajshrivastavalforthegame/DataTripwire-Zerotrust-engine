@@ -1,11 +1,11 @@
 import { motion } from "motion/react";
 import { RotateCcw, ShieldCheck } from "lucide-react";
-import { useSecurityStore } from "../../services/securityStore";
+import { securityStore, useSecurityStore } from "../../services/securityStore";
 
 const toggles=[["continuousEvaluation","Continuous evaluation","Re-evaluate every active session continuously."],["highRiskAlerts","High-risk notifications","Notify analysts when a session crosses the high-risk threshold."],["auditLogging","Audit logging","Record policy decisions and enforcement actions."],["stepUpVerification","Step-up verification","Require re-authentication for medium-risk sensitive actions."],["automaticContainment","Automatic containment","Allow policy rules to restrict or quarantine high-risk sessions."]];
 export default function Settings(){
  const settings=useSecurityStore(s=>s.settings);
- const update=useSecurityStore(s=>s.updateSetting);
+ const update=useSecurityStore(()=>securityStore.updateSetting);
  const reset=()=>{const defaults={continuousEvaluation:true,highRiskAlerts:true,auditLogging:true,stepUpVerification:true,automaticContainment:true,verifyThreshold:50,restrictThreshold:70,blockThreshold:85};Object.entries(defaults).forEach(([k,v])=>update(k,v));};
  return <motion.div className="page security-page" initial={{opacity:0,y:10}} animate={{opacity:1,y:0}}>
   <div className="security-page-heading"><div><span className="security-eyebrow">CONSOLE CONFIGURATION</span><h1>Settings</h1><p>Configure continuous evaluation and adaptive enforcement guardrails.</p></div><div className="sec-setting-actions"><button className="sec-secondary-button" onClick={reset}><RotateCcw size={14}/> Reset</button><span className="sec-live-badge"><ShieldCheck size={13}/> Saved locally</span></div></div>

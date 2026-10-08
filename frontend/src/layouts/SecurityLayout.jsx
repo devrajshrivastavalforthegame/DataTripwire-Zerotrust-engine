@@ -1,9 +1,11 @@
 import { Outlet } from "react-router-dom";
+import InteractionBridge from "../components/common/InteractionBridge";
 import SecuritySidebar from "../components/security/Sidebar";
 import SecurityTopbar from "../components/security/Topbar";
 
 export default function SecurityLayout() {
   return (
+    <InteractionBridge />
     <div className="app-shell security-shell">
       <div className="security-grid" />
       <div className="security-stars" />

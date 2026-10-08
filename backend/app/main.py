@@ -1,5 +1,6 @@
 import time
 import uuid
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -9,6 +10,7 @@ from fastapi.responses import JSONResponse
 from app.api.v1.health import router as health_router
 from app.api_v1_access import router as access_router
 from app.api_v1_security import router as security_router
+from app.bootstrap import seed_demo_data
 from app.core.config import get_settings
 from app.core.errors import (
     error_payload,
@@ -18,10 +20,20 @@ from app.core.errors import (
 
 settings = get_settings()
 
+@asynccontextmanager
+async def lifespan(_app):
+    from app.db import Base, engine
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    await seed_demo_data()
+    yield
+    await engine.dispose()
+
 app = FastAPI(
     title=settings.app_name,
     description="Policy-driven continuous trust backend for the DataTripwire Zero Trust Engine.",
     version=settings.app_version,
+    lifespan=lifespan,
 )
 
 

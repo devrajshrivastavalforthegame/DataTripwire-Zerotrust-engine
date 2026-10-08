@@ -1,0 +1,303 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "DataTripwire Backend API",
+    "version": "1.0.0",
+    "description": "Responsibility-aware continuous trust and adaptive threat containment API."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Backend health",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "Health"
+        ]
+      }
+    },
+    "/health/db": {
+      "get": {
+        "summary": "Database health",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "503": {
+            "description": "Database unavailable"
+          }
+        },
+        "tags": [
+          "Health"
+        ]
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "summary": "Login",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "password"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password"
+                  },
+                  "deviceFingerprint": {
+                    "type": "string"
+                  },
+                  "location": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful"
+          },
+          "401": {
+            "description": "Invalid credentials"
+          }
+        },
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Current identity and session",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "End current session",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/api/v1/behavior": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Record behavior and run risk/AI/policy pipeline",
+        "responses": {
+          "201": {
+            "description": "Risk pipeline result"
+          },
+          "400": {
+            "description": "Validation error"
+          }
+        },
+        "tags": [
+          "Behavior & Risk"
+        ]
+      }
+    },
+    "/api/v1/security/baseline": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Get personal baseline",
+        "responses": {
+          "200": {
+            "description": "Baseline"
+          }
+        },
+        "tags": [
+          "Baseline"
+        ]
+      }
+    },
+    "/api/v1/security/baseline/rebuild": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Rebuild baseline from eligible active sessions",
+        "responses": {
+          "200": {
+            "description": "Baseline rebuilt"
+          },
+          "403": {
+            "description": "Session not active"
+          }
+        },
+        "tags": [
+          "Baseline"
+        ]
+      }
+    },
+    "/api/v1/security/finance/archive/backup": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Controlled deception resource",
+        "responses": {
+          "200": {
+            "description": "Decoy event processed"
+          }
+        },
+        "tags": [
+          "Deception"
+        ]
+      }
+    },
+    "/api/v1/security/sessions": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Active/restricted/quarantined sessions",
+        "responses": {
+          "200": {
+            "description": "Sessions"
+          }
+        },
+        "tags": [
+          "SOC & Monitoring"
+        ]
+      }
+    },
+    "/api/v1/security/sessions/{sessionId}/timeline": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Session security timeline",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Timeline"
+          }
+        },
+        "tags": [
+          "SOC & Monitoring"
+        ]
+      }
+    },
+    "/api/v1/security/audit": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Recent audit trail",
+        "responses": {
+          "200": {
+            "description": "Audit logs"
+          }
+        },
+        "tags": [
+          "SOC & Monitoring"
+        ]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Health",
+      "description": "Backend and database health checks"
+    },
+    {
+      "name": "Authentication",
+      "description": "Identity, session authentication and logout"
+    },
+    {
+      "name": "Behavior & Risk",
+      "description": "Behavior telemetry, risk scoring and security decisions"
+    },
+    {
+      "name": "Baseline",
+      "description": "User behavior baseline management"
+    },
+    {
+      "name": "Deception",
+      "description": "Controlled deception resources and security tripwires"
+    },
+    {
+      "name": "SOC & Monitoring",
+      "description": "Security sessions, timelines and audit visibility"
+    }
+  ]
+}

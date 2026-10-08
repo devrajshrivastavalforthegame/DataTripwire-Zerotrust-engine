@@ -7,6 +7,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.api.v1.health import router as health_router
+from app.api_v1_access import router as access_router
+from app.api_v1_security import router as security_router
 from app.core.config import get_settings
 from app.core.errors import (
     error_payload,
@@ -86,6 +88,8 @@ def root():
 
 
 app.include_router(health_router, prefix=settings.api_v1_prefix)
+app.include_router(access_router, prefix=settings.api_v1_prefix)
+app.include_router(security_router, prefix=settings.api_v1_prefix)
 
 
 @app.exception_handler(404)

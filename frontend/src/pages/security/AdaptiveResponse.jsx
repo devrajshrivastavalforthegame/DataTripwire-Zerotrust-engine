@@ -1,11 +1,11 @@
 import { motion } from "motion/react";
 import { Play } from "lucide-react";
-import { useSecurityStore } from "../../services/securityStore";
+import { securityStore, useSecurityStore } from "../../services/securityStore";
 
 const levels=[["ALLOW","Normal activity continues.","allow"],["VERIFY","Re-authentication required.","verify"],["RESTRICT","Sensitive actions are limited.","restrict"],["BLOCK","Session is quarantined.","block"]];
 export default function AdaptiveResponse(){
  const responses=useSecurityStore(s=>s.responses);
- const executeResponse=useSecurityStore(s=>s.executeResponse);
+ const executeResponse=useSecurityStore(()=>securityStore.executeResponse);
  return <motion.div className="page security-page" initial={{opacity:0,y:10}} animate={{opacity:1,y:0}}>
   <div className="security-page-heading"><div><span className="security-eyebrow">RESPONSE CONTROL</span><h1>Adaptive Response</h1><p>Escalation and recovery are determined by policy, never by AI.</p></div></div>
   <section className="security-panel"><div className="response-ladder">{levels.map(([label,description,type],i)=><div className={"response-level "+type} key={label}><span>0{i+1}</span><strong>{label}</strong><p>{description}</p></div>)}</div></section>

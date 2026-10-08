@@ -38,6 +38,8 @@ def build_safe_fallback(
                 "Policy Engine using its deterministic controls."
             ),
             "recommendation": "VERIFY",
+	    "recommendation_type": "ADVISORY_ONLY",
+	    "backend_decision": "VERIFY",
             "assessment": {
                 "severity": "UNKNOWN",
                 "confidence": 0.0,

@@ -41,6 +41,16 @@ class ActivityContext(BaseModel):
 
 
 class SecurityContext(BaseModel):
+    role: str = ""
+    responsibility: str = ""
+    task: str = ""
+    resource: str = ""
+    action: str = ""
+    scope: str = ""
+    sts: float = 0
+    ats: float = 0
+    session_status: str = "active"
+
     task_match: bool = True
     responsibility_match: bool = True
     sensitive_resource: bool = False
@@ -49,13 +59,17 @@ class SecurityContext(BaseModel):
 
 class AnalyzeRequest(BaseModel):
     user_id: str
-    session_id: str
+    session_id: str = ""
+
+    risk_score: float = Field(default=0, ge=0, le=100)
+    decision: str = "ALLOW"
+    reasons: list[str] = Field(default_factory=list)
+
     device: DeviceContext = DeviceContext()
     location: LocationContext = LocationContext()
     time_context: TimeContext = TimeContext()
     activity: ActivityContext = ActivityContext()
     context: SecurityContext = SecurityContext()
-
 
 @app.get("/health")
 def health():
@@ -69,6 +83,28 @@ def health():
 def analyze_behaviour(data: AnalyzeRequest):
     signals = []
     score_components = []
+
+    # Consume evidence already identified by the backend Risk Engine.
+    for reason in data.reasons:
+        if reason not in signals:
+            signals.append(reason)
+
+    # Translate backend risk evidence into AI advisory signals.
+    reason_weights = {
+        "new_device": 0.10,
+        "new_location": 0.08,
+        "unusual_login_time": 0.08,
+        "high_request_volume": 0.18,
+        "unusual_resource": 0.12,
+        "unusual_action": 0.08,
+        "scope_violation": 0.15,
+        "decoy_access": 0.25,
+    }
+
+    for reason in data.reasons:
+        if reason in reason_weights:
+            score_components.append(reason_weights[reason])
+
 
     if data.device.is_new:
         signals.append("new_device")
@@ -133,7 +169,31 @@ def analyze_behaviour(data: AnalyzeRequest):
         "cross_domain_access": data.activity.cross_domain_access,
     }
 
-    ml_analysis = behaviour_analysis_service.analyze_ml(ml_features)
+    has_activity_telemetry = any([
+    	data.activity.requests_per_minute > 0,
+    	data.activity.unique_resources > 0,
+    	data.activity.records_accessed > 0,
+    	data.activity.download_volume_mb > 0,
+    	data.activity.authorization_failures > 0,
+    	data.activity.cross_domain_access > 0,
+     ])
+
+    if has_activity_telemetry:
+    	ml_analysis = behaviour_analysis_service.analyze_ml(ml_features)
+    else:
+    	ml_analysis = {
+          "ml": {
+             "anomaly_score": 0.0,
+             "is_anomaly": False,
+             "severity": "UNAVAILABLE",
+             "model": "isolation_forest_not_run",
+          },
+          "baseline_deviation": {
+              "score": 0.0,
+              "severity": "UNAVAILABLE",
+              "feature_deviations": {},
+           },
+     	}
 
     anomaly_score = min(1.0, sum(score_components))
 
@@ -187,8 +247,10 @@ def analyze_behaviour(data: AnalyzeRequest):
         "baseline_deviation": ml_analysis["baseline_deviation"],
         "signals": signals,
         "explanation": explanation,
-        "recommendation": recommendation,
-        "assessment": assessment,
+	"recommendation": recommendation,
+	"recommendation_type": "ADVISORY_ONLY",
+	"backend_decision": data.decision,
+	"assessment": assessment,
     }
 
 

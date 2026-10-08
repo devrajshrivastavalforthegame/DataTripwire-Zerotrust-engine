@@ -32,6 +32,10 @@ def valid_analysis():
         ],
         "explanation": "The session shows elevated behavioural risk.",
         "recommendation": "RESTRICT",
+	
+        "recommendation_type": "ADVISORY_ONLY",
+        "backend_decision": "RESTRICT",
+
         "assessment": {
             "severity": "HIGH",
             "confidence": 0.91,

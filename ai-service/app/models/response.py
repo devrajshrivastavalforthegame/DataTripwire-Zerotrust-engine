@@ -1,5 +1,4 @@
 from typing import List
-
 from pydantic import BaseModel, Field
 
 
@@ -36,6 +35,8 @@ class AnalysisResult(BaseModel):
     signals: List[str]
     explanation: str
     recommendation: str
+    recommendation_type: str
+    backend_decision: str
     assessment: SecurityAssessment
 
 

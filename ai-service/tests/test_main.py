@@ -144,3 +144,56 @@ def test_legacy_anomaly_endpoint():
 
     assert response.status_code == 200
     assert "anomaly_score" in response.json()
+def test_backend_payload_without_telemetry():
+    payload = {
+        "user_id": "demo-user-001",
+        "risk_score": 42,
+        "decision": "MONITOR",
+        "reasons": ["new_device", "high_request_volume"],
+        "context": {
+            "role": "employee",
+            "responsibility": "finance",
+            "task": "reporting",
+            "resource": "reports",
+            "action": "read",
+            "scope": "finance",
+            "sts": 58,
+            "ats": 25,
+            "session_status": "active",
+        },
+    }
+
+    response = client.post("/api/v1/analyze", json=payload)
+
+    assert response.status_code == 200
+
+    analysis = response.json()["analysis"]
+
+    assert analysis["recommendation_type"] == "ADVISORY_ONLY"
+    assert analysis["backend_decision"] == "MONITOR"
+    assert analysis["ml"]["severity"] == "UNAVAILABLE"
+
+
+def test_anomaly_with_real_telemetry():
+    payload = {
+        "user_id": "demo-user-001",
+        "session_id": "sess-001",
+        "activity": {
+            "requests_per_minute": 80,
+            "unique_resources": 20,
+            "records_accessed": 500,
+            "download_volume_mb": 150,
+            "authorization_failures": 6,
+            "cross_domain_access": 4,
+        },
+    }
+
+    response = client.post("/api/v1/analyze", json=payload)
+
+    assert response.status_code == 200
+
+    analysis = response.json()["analysis"]
+
+    assert analysis["ml"]["is_anomaly"] is True
+    assert analysis["ml"]["anomaly_score"] > 0.8
+    assert analysis["baseline_deviation"]["severity"] == "CRITICAL"

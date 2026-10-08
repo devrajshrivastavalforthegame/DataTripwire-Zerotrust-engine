@@ -7230,3 +7230,288 @@ input:focus-visible {
     animation-delay: -2.5s;
   }
 }
+
+
+/* ============================================================
+   SOC V3 — BALANCED REFERENCE MATCH
+   Reference target: dark-purple enterprise console, but NOT black.
+   ============================================================ */
+
+.security-shell {
+  background:
+    radial-gradient(900px 520px at 72% 2%, rgba(128, 83, 190, .18), transparent 62%),
+    radial-gradient(720px 560px at 12% 78%, rgba(82, 55, 132, .14), transparent 64%),
+    linear-gradient(135deg, #191426 0%, #171225 48%, #141020 100%) !important;
+}
+
+.security-shell::before {
+  background:
+    radial-gradient(560px 360px at 36% 12%, rgba(166, 119, 224, .075), transparent 70%),
+    radial-gradient(520px 360px at 86% 78%, rgba(105, 72, 165, .065), transparent 70%) !important;
+  opacity: .9 !important;
+}
+
+.security-grid {
+  opacity: .10 !important;
+  background-image:
+    linear-gradient(rgba(190, 155, 228, .055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(190, 155, 228, .055) 1px, transparent 1px) !important;
+  background-size: 56px 56px !important;
+}
+
+.security-stars {
+  opacity: .24 !important;
+}
+
+.security-orb {
+  opacity: .45 !important;
+  filter: blur(95px) !important;
+}
+
+.security-sidebar {
+  background:
+    linear-gradient(180deg, #100b18 0%, #0f0b17 100%) !important;
+  border-right: 1px solid rgba(185, 151, 220, .13) !important;
+  box-shadow: 12px 0 45px rgba(5, 3, 10, .22) !important;
+}
+
+.security-brand-icon {
+  background: linear-gradient(145deg, #3c2759, #241737) !important;
+  border-color: rgba(183, 143, 229, .28) !important;
+  color: #c5a7ed !important;
+  box-shadow: 0 8px 24px rgba(104, 64, 151, .18) !important;
+}
+
+.security-sidebar .sidebar-link {
+  color: #94889e !important;
+}
+
+.security-sidebar .sidebar-link:hover {
+  color: #eee7f4 !important;
+  background: rgba(126, 84, 177, .12) !important;
+}
+
+.security-sidebar .sidebar-link.active {
+  color: #f0e8f7 !important;
+  background:
+    linear-gradient(90deg, rgba(116, 76, 174, .30), rgba(86, 53, 130, .12)) !important;
+  border-color: rgba(181, 139, 225, .14) !important;
+  box-shadow:
+    inset 2px 0 0 #a985dc,
+    0 7px 20px rgba(67, 40, 102, .12) !important;
+}
+
+.security-topbar {
+  background: rgba(22, 17, 33, .88) !important;
+  border-bottom: 1px solid rgba(184, 151, 220, .12) !important;
+  box-shadow: 0 10px 34px rgba(5, 3, 10, .16) !important;
+}
+
+.security-search {
+  background: #211a2f !important;
+  border-color: rgba(184, 151, 220, .16) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.018) !important;
+}
+
+.security-search.focused {
+  background: #241c34 !important;
+  border-color: rgba(178, 137, 226, .42) !important;
+}
+
+.security-live-indicator {
+  background: rgba(53, 117, 83, .08) !important;
+  border-color: rgba(100, 194, 151, .15) !important;
+}
+
+.security-icon-button,
+.security-topbar-user {
+  background: rgba(255,255,255,.025) !important;
+  border-color: rgba(184, 151, 220, .12) !important;
+}
+
+.security-page-container {
+  background: transparent !important;
+}
+
+.sec-page-heading h1 {
+  color: #f3ecf7 !important;
+  text-shadow: none !important;
+}
+
+.sec-page-heading p {
+  color: #988da2 !important;
+}
+
+.sec-eyebrow,
+.sec-section-label,
+.sec-detail-label {
+  color: #81738d !important;
+}
+
+.sec-metric {
+  background:
+    linear-gradient(145deg, #261e36 0%, #211a30 100%) !important;
+  border-color: rgba(184, 151, 220, .14) !important;
+  box-shadow:
+    0 14px 35px rgba(7, 4, 13, .20),
+    inset 0 1px 0 rgba(255,255,255,.025) !important;
+}
+
+.sec-metric:hover {
+  background:
+    linear-gradient(145deg, #2b2140 0%, #241c35 100%) !important;
+  border-color: rgba(190, 150, 231, .25) !important;
+}
+
+.sec-metric::before,
+.sec-panel::before {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(173, 112, 234, .065), transparent 38%) !important;
+}
+
+.sec-metric-icon {
+  background: rgba(143, 95, 199, .13) !important;
+  color: #bea0e6 !important;
+}
+
+.sec-metric > strong {
+  color: #f2ebf6 !important;
+}
+
+.sec-metric > span:last-child {
+  color: #92869d !important;
+}
+
+.sec-panel {
+  background:
+    linear-gradient(145deg, #251d35 0%, #20192e 100%) !important;
+  border-color: rgba(184, 151, 220, .14) !important;
+  box-shadow:
+    0 16px 42px rgba(7, 4, 13, .20),
+    inset 0 1px 0 rgba(255,255,255,.022) !important;
+}
+
+.sec-panel-header {
+  border-bottom-color: rgba(184, 151, 220, .095) !important;
+}
+
+.sec-panel-header h2 {
+  color: #e8dfef !important;
+}
+
+.sec-trust-ring {
+  background:
+    radial-gradient(circle, #21192f 59%, transparent 60%),
+    conic-gradient(#9f78d5 0 82%, #392b48 82% 100%) !important;
+  box-shadow: 0 0 35px rgba(143, 86, 198, .10) !important;
+}
+
+.sec-trust-ring strong {
+  color: #f3ebf7 !important;
+}
+
+.sec-mini-factors > div {
+  background: #2a2039 !important;
+  border-color: rgba(184, 151, 220, .095) !important;
+}
+
+.sec-health-row,
+.sec-event-row,
+.sec-user-row,
+.sec-session-row {
+  border-bottom-color: rgba(184, 151, 220, .075) !important;
+}
+
+.sec-health-row > span,
+.sec-event-row > span,
+.sec-user-row,
+.sec-session-row {
+  color: #968a9f !important;
+}
+
+.sec-event-row > strong,
+.sec-user-name strong,
+.sec-session-row > strong {
+  color: #d1c5d8 !important;
+}
+
+.sec-event-row:hover,
+.sec-activity-row:hover,
+.sec-activity-row.selected {
+  background:
+    linear-gradient(90deg, rgba(123, 80, 181, .14), rgba(89, 57, 132, .035)) !important;
+}
+
+.sec-search,
+.sec-filter-group,
+.sec-secondary-button {
+  background: #211a30 !important;
+  border-color: rgba(184, 151, 220, .14) !important;
+}
+
+.sec-filter-group button.active {
+  background: rgba(132, 83, 190, .22) !important;
+  color: #e2d5eb !important;
+}
+
+.sec-investigation {
+  background:
+    linear-gradient(145deg, #2a203b 0%, #21192f 100%) !important;
+  border-color: rgba(193, 151, 232, .18) !important;
+  box-shadow: 0 18px 48px rgba(5, 3, 10, .24) !important;
+}
+
+.sec-risk-ring {
+  background:
+    radial-gradient(circle, #21192f 59%, transparent 60%),
+    conic-gradient(#a778d5 0 82%, #392b48 82% 100%) !important;
+}
+
+.sec-risk-ring.critical {
+  background:
+    radial-gradient(circle, #21192f 59%, transparent 60%),
+    conic-gradient(#d8758f 0 87%, #392b48 87% 100%) !important;
+}
+
+.sec-risk-ring.warning {
+  background:
+    radial-gradient(circle, #21192f 59%, transparent 60%),
+    conic-gradient(#cda267 0 52%, #392b48 52% 100%) !important;
+}
+
+.sec-risk-ring.safe {
+  background:
+    radial-gradient(circle, #21192f 59%, transparent 60%),
+    conic-gradient(#67b88d 0 25%, #392b48 25% 100%) !important;
+}
+
+.sec-factor-bar {
+  background: #3b2c4b !important;
+}
+
+.sec-factor-bar i {
+  background: linear-gradient(90deg, #7955aa, #a77ad0) !important;
+}
+
+.sec-policy-result {
+  background: #211a30 !important;
+  border-color: rgba(184, 151, 220, .14) !important;
+}
+
+@media (max-width: 900px) {
+  .security-sidebar {
+    width: 218px !important;
+    min-width: 218px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .security-shell::before,
+  .security-stars,
+  .security-grid,
+  .security-orb,
+  .sec-metric,
+  .sec-panel {
+    animation: none !important;
+  }
+}

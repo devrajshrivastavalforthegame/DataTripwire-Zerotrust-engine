@@ -7515,3 +7515,237 @@ input:focus-visible {
     animation: none !important;
   }
 }
+
+
+/* ============================================================
+   SOC V4 — LIGHTER REFERENCE BALANCE
+   Main workspace intentionally lifted several shades.
+   ============================================================ */
+
+.security-shell {
+  background:
+    radial-gradient(900px 520px at 72% 2%, rgba(151, 103, 207, .16), transparent 62%),
+    radial-gradient(720px 560px at 10% 78%, rgba(105, 76, 151, .11), transparent 64%),
+    linear-gradient(135deg, #242039 0%, #211c34 50%, #1f1a31 100%) !important;
+}
+
+.security-shell::before {
+  background:
+    radial-gradient(560px 360px at 35% 12%, rgba(183, 139, 230, .07), transparent 70%),
+    radial-gradient(520px 360px at 86% 78%, rgba(130, 91, 183, .05), transparent 70%) !important;
+  opacity: .75 !important;
+}
+
+.security-grid {
+  opacity: .07 !important;
+}
+
+.security-stars {
+  opacity: .18 !important;
+}
+
+.security-orb {
+  opacity: .32 !important;
+  filter: blur(105px) !important;
+}
+
+.security-sidebar {
+  background: linear-gradient(180deg, #15111f 0%, #130f1d 100%) !important;
+  border-right-color: rgba(195, 166, 224, .13) !important;
+}
+
+.security-brand-icon {
+  background: linear-gradient(145deg, #4a3165, #302044) !important;
+  border-color: rgba(201, 164, 235, .30) !important;
+}
+
+.security-sidebar .sidebar-link {
+  color: #a197aa !important;
+}
+
+.security-sidebar .sidebar-link:hover {
+  color: #f0e9f5 !important;
+  background: rgba(145, 103, 190, .13) !important;
+}
+
+.security-sidebar .sidebar-link.active {
+  background:
+    linear-gradient(90deg, rgba(133, 92, 193, .32), rgba(105, 70, 154, .15)) !important;
+  color: #f5edf9 !important;
+  border-color: rgba(201, 164, 235, .15) !important;
+  box-shadow: inset 2px 0 0 #b08be0, 0 7px 20px rgba(70, 45, 99, .10) !important;
+}
+
+.security-topbar {
+  background: rgba(31, 26, 47, .92) !important;
+  border-bottom-color: rgba(195, 166, 224, .13) !important;
+}
+
+.security-search {
+  background: #2b2640 !important;
+  border-color: rgba(201, 170, 230, .18) !important;
+}
+
+.security-search.focused {
+  background: #302946 !important;
+}
+
+.security-icon-button,
+.security-topbar-user {
+  background: rgba(255,255,255,.035) !important;
+  border-color: rgba(201, 170, 230, .14) !important;
+}
+
+.security-page-container {
+  padding-top: 34px !important;
+}
+
+.sec-page-heading h1 {
+  color: #f7f1fa !important;
+}
+
+.sec-page-heading p {
+  color: #a69bad !important;
+}
+
+.sec-eyebrow,
+.sec-section-label,
+.sec-detail-label {
+  color: #8e8098 !important;
+}
+
+.sec-metric {
+  background: linear-gradient(145deg, #302947 0%, #2b2540 100%) !important;
+  border-color: rgba(201, 170, 230, .16) !important;
+  box-shadow:
+    0 14px 34px rgba(12, 8, 20, .17),
+    inset 0 1px 0 rgba(255,255,255,.035) !important;
+}
+
+.sec-metric:hover {
+  background: linear-gradient(145deg, #352d4d 0%, #302946 100%) !important;
+  border-color: rgba(207, 174, 236, .27) !important;
+}
+
+.sec-metric-icon {
+  background: rgba(151, 103, 207, .15) !important;
+  color: #c9aee8 !important;
+}
+
+.sec-metric > strong {
+  color: #f5eef8 !important;
+}
+
+.sec-metric > span:last-child {
+  color: #a095aa !important;
+}
+
+.sec-panel {
+  background: linear-gradient(145deg, #2e2844 0%, #29233d 100%) !important;
+  border-color: rgba(201, 170, 230, .16) !important;
+  box-shadow:
+    0 16px 40px rgba(12, 8, 20, .17),
+    inset 0 1px 0 rgba(255,255,255,.03) !important;
+}
+
+.sec-panel-header {
+  border-bottom-color: rgba(201, 170, 230, .10) !important;
+}
+
+.sec-panel-header h2 {
+  color: #eee6f3 !important;
+}
+
+.sec-trust-ring {
+  background:
+    radial-gradient(circle, #29223d 59%, transparent 60%),
+    conic-gradient(#aa83d8 0 82%, #514263 82% 100%) !important;
+  box-shadow: 0 0 32px rgba(151, 103, 207, .09) !important;
+}
+
+.sec-trust-ring strong {
+  color: #f7effa !important;
+}
+
+.sec-mini-factors > div {
+  background: #342c49 !important;
+  border-color: rgba(201, 170, 230, .11) !important;
+}
+
+.sec-health-row,
+.sec-event-row,
+.sec-user-row,
+.sec-session-row {
+  border-bottom-color: rgba(201, 170, 230, .085) !important;
+}
+
+.sec-health-row > span,
+.sec-event-row > span,
+.sec-user-row,
+.sec-session-row {
+  color: #a397ad !important;
+}
+
+.sec-event-row > strong,
+.sec-user-name strong,
+.sec-session-row > strong {
+  color: #d9cde0 !important;
+}
+
+.sec-event-row:hover,
+.sec-activity-row:hover,
+.sec-activity-row.selected {
+  background:
+    linear-gradient(90deg, rgba(139, 92, 195, .15), rgba(111, 75, 157, .04)) !important;
+}
+
+.sec-search,
+.sec-filter-group,
+.sec-secondary-button {
+  background: #2b2540 !important;
+  border-color: rgba(201, 170, 230, .15) !important;
+}
+
+.sec-filter-group button.active {
+  background: rgba(145, 95, 202, .23) !important;
+  color: #eee3f4 !important;
+}
+
+.sec-investigation {
+  background: linear-gradient(145deg, #352d49 0%, #2a233d 100%) !important;
+  border-color: rgba(207, 174, 236, .19) !important;
+  box-shadow: 0 18px 46px rgba(9, 6, 15, .21) !important;
+}
+
+.sec-risk-ring {
+  background:
+    radial-gradient(circle, #2b2340 59%, transparent 60%),
+    conic-gradient(#ae82d8 0 82%, #514263 82% 100%) !important;
+}
+
+.sec-risk-ring.critical {
+  background:
+    radial-gradient(circle, #2b2340 59%, transparent 60%),
+    conic-gradient(#dd7b94 0 87%, #514263 87% 100%) !important;
+}
+
+.sec-risk-ring.warning {
+  background:
+    radial-gradient(circle, #2b2340 59%, transparent 60%),
+    conic-gradient(#d1a66c 0 52%, #514263 52% 100%) !important;
+}
+
+.sec-risk-ring.safe {
+  background:
+    radial-gradient(circle, #2b2340 59%, transparent 60%),
+    conic-gradient(#6abb91 0 25%, #514263 25% 100%) !important;
+}
+
+.sec-factor-bar {
+  background: #514362 !important;
+}
+
+.sec-policy-result {
+  background: #2b2540 !important;
+  border-color: rgba(201, 170, 230, .15) !important;
+}

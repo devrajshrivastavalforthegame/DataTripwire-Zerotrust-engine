@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 from app.services import behaviour_analysis_service
 from app.assessment_service import security_assessment_service
 from app.models.response import AnalyzeResponse
+from app.fallback import build_safe_fallback
 
 
 app = FastAPI(
@@ -193,14 +194,24 @@ def analyze_behaviour(data: AnalyzeRequest):
 
 @app.post("/api/v1/analyze", response_model=AnalyzeResponse)
 def analyze(data: AnalyzeRequest):
-    result = analyze_behaviour(data)
+    try:
+        result = analyze_behaviour(data)
 
-    return {
-        "user_id": data.user_id,
-        "session_id": data.session_id,
-        "analysis": result,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-    }
+        return {
+            "user_id": data.user_id,
+            "session_id": data.session_id,
+            "analysis": result,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+
+    except Exception as exc:
+        print(f"[AI ERROR] {type(exc).__name__}: {exc}")
+
+        return build_safe_fallback(
+            user_id=data.user_id,
+            session_id=data.session_id,
+            reason=f"AI analysis failure: {type(exc).__name__}",
+        )
 
 
 class FeatureVector(BaseModel):

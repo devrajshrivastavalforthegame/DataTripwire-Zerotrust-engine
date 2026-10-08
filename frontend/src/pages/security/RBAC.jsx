@@ -1,12 +1,12 @@
 import { motion } from "motion/react";
 import { Shield, Check, X } from "lucide-react";
 import { useState } from "react";
-import { useSecurityStore } from "../../services/securityStore";
+import { securityStore, useSecurityStore } from "../../services/securityStore";
 
 const keys=[["overview","Overview"],["users","Users & Risk"],["resources","Resources"],["incidents","Incidents"],["policies","Policy Engine"],["rbac","RBAC"],["audit","Audit Logs"],["response","Adaptive Response"]];
 export default function RBAC(){
  const roles=useSecurityStore(s=>s.roles);
- const updatePermission=useSecurityStore(s=>s.updatePermission);
+ const updatePermission=useSecurityStore(()=>securityStore.updatePermission);
  const [selected,setSelected]=useState(roles[0]?.id);
  const role=roles.find(r=>r.id===selected)||roles[0];
  return <motion.div className="page security-page" initial={{opacity:0,y:10}} animate={{opacity:1,y:0}}>

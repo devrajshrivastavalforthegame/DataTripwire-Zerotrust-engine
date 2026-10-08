@@ -7,10 +7,15 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { api } from "../../api";
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const [email,setEmail] = useState("");
+  const [password,setPassword] = useState("");
+  const [error,setError] = useState("");
+  const [loading,setLoading] = useState(false);
 
   return (
     <main className="ws-login">
@@ -62,9 +67,12 @@ export default function Login() {
           </div>
 
           <form
-            onSubmit={(event) => {
+            onSubmit={async (event) => {
               event.preventDefault();
-              navigate("/");
+              setError(""); setLoading(true);
+              try { const result=await api.login({email,password}); navigate(result.user.roles.some(r=>r.includes("Security"))?"/security":"/"); }
+              catch (e) { setError(e.message || "Unable to sign in."); }
+              finally { setLoading(false); }
             }}
           >
             <label>
@@ -72,6 +80,8 @@ export default function Login() {
               <input
                 type="email"
                 placeholder="you@company.com"
+                value={email}
+                onChange={(e)=>setEmail(e.target.value)}
                 required
               />
             </label>
@@ -82,6 +92,8 @@ export default function Login() {
                 <input
                   type={showPassword ? "text" : "password"}
                   placeholder="Enter your password"
+                  value={password}
+                  onChange={(e)=>setPassword(e.target.value)}
                   required
                 />
                 <button
@@ -103,9 +115,10 @@ export default function Login() {
               <button type="button">Forgot password?</button>
             </div>
 
-            <button className="ws-login-button" type="submit">
-              Sign in
-              <ArrowRight size={17} />
+            {error && <div className="ws-login-error">{error}</div>}
+            <button className="ws-login-button" type="submit" disabled={loading}>
+              {loading ? "Signing in..." : "Sign in"}
+              {!loading && <ArrowRight size={17} />}
             </button>
           </form>
 

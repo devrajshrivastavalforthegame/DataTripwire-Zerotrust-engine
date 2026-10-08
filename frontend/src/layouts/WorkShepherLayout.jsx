@@ -6,7 +6,7 @@ import WorkShepherTopbar from "../components/workshepher/Topbar";
 export default function WorkShepherLayout() {
   return (
     <div><InteractionBridge />
-    <div className="app-shell workshepher-shell>
+    <div className="app-shell workshepher-shell">
       <div className="ambient ambient-one" />
       <div className="ambient ambient-two" />
 

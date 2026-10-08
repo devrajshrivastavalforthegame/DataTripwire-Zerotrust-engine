@@ -1,9 +1,11 @@
 ﻿import { Outlet } from "react-router-dom";
+import InteractionBridge from "../components/common/InteractionBridge";
 import WorkShepherSidebar from "../components/workshepher/Sidebar";
 import WorkShepherTopbar from "../components/workshepher/Topbar";
 
 export default function WorkShepherLayout() {
   return (
+    <InteractionBridge />
     <div className="app-shell workshepher-shell">
       <div className="ambient ambient-one" />
       <div className="ambient ambient-two" />

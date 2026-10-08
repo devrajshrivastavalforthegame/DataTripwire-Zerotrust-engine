@@ -7749,3 +7749,154 @@ input:focus-visible {
   background: #2b2540 !important;
   border-color: rgba(201, 170, 230, .15) !important;
 }
+
+
+/* ============================================================
+   SOC V5 — REFERENCE-LIKE ANIMATED ATMOSPHERE
+   Soft moving purple light + sparse particles. No cyber grid.
+   ============================================================ */
+
+@keyframes socReferenceDrift {
+  0%, 100% {
+    background-position: 0% 0%, 100% 100%, 50% 50%;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  35% {
+    background-position: 18% 12%, 84% 82%, 58% 44%;
+    transform: translate3d(8px, -5px, 0) scale(1.015);
+  }
+  70% {
+    background-position: 8% 22%, 92% 68%, 42% 58%;
+    transform: translate3d(-6px, 7px, 0) scale(.99);
+  }
+}
+
+@keyframes socReferenceParticles {
+  0%, 100% {
+    background-position:
+      0 0,
+      0 0,
+      0 0,
+      0 0,
+      0 0,
+      0 0;
+    opacity: .24;
+  }
+  50% {
+    background-position:
+      28px -18px,
+      -36px 22px,
+      22px 34px,
+      -30px -26px,
+      42px 12px,
+      -18px 38px;
+    opacity: .34;
+  }
+}
+
+@keyframes socReferenceGlow {
+  0%, 100% { opacity: .42; }
+  50% { opacity: .70; }
+}
+
+/* Keep the reference's clean atmosphere; remove the visible tech-grid feel. */
+.security-grid {
+  opacity: .018 !important;
+  background-size: 72px 72px !important;
+  animation: none !important;
+}
+
+.security-scan,
+.security-scan::after {
+  opacity: 0 !important;
+  animation: none !important;
+}
+
+/* Large, very soft moving purple/blue atmospheric light. */
+.security-shell::after {
+  content: "";
+  position: fixed;
+  inset: -12%;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(620px 420px at 20% 12%, rgba(154, 103, 207, .095), transparent 72%),
+    radial-gradient(700px 500px at 88% 76%, rgba(94, 70, 154, .085), transparent 72%),
+    radial-gradient(500px 380px at 54% 48%, rgba(188, 137, 226, .035), transparent 74%);
+  animation: socReferenceDrift 24s ease-in-out infinite;
+  will-change: transform, background-position;
+}
+
+/* Sparse floating particles like the reference image. */
+.security-stars {
+  opacity: .28 !important;
+  background-image:
+    radial-gradient(circle at 8% 18%, rgba(225, 205, 248, .72) 0 1px, transparent 1.6px),
+    radial-gradient(circle at 24% 76%, rgba(205, 176, 238, .58) 0 1px, transparent 1.6px),
+    radial-gradient(circle at 39% 31%, rgba(226, 207, 248, .62) 0 1px, transparent 1.6px),
+    radial-gradient(circle at 54% 72%, rgba(197, 165, 232, .52) 0 1px, transparent 1.6px),
+    radial-gradient(circle at 70% 18%, rgba(224, 201, 248, .66) 0 1px, transparent 1.6px),
+    radial-gradient(circle at 87% 54%, rgba(202, 172, 237, .55) 0 1px, transparent 1.6px);
+  background-size:
+    270px 230px,
+    360px 300px,
+    430px 340px,
+    320px 270px,
+    390px 310px,
+    520px 380px;
+  animation: socReferenceParticles 20s ease-in-out infinite !important;
+  will-change: background-position, opacity;
+}
+
+/* Soft drifting light blobs behind the workspace. */
+.security-orb {
+  filter: blur(110px) !important;
+  opacity: .34 !important;
+}
+
+.security-orb-one {
+  background: rgba(151, 96, 207, .12) !important;
+  animation: ambientFloatTwo 22s ease-in-out infinite !important;
+}
+
+.security-orb-two {
+  background: rgba(111, 77, 172, .085) !important;
+  animation: ambientFloatOne 28s ease-in-out infinite !important;
+}
+
+.security-orb-three {
+  background: rgba(190, 126, 218, .06) !important;
+  animation: ambientFloatThree 19s ease-in-out infinite !important;
+}
+
+.security-ambient-one,
+.security-ambient-two {
+  filter: blur(90px) !important;
+  opacity: .42 !important;
+}
+
+.security-ambient-one {
+  background: rgba(143, 88, 211, .075) !important;
+  animation: ambientFloatTwo 25s ease-in-out infinite !important;
+}
+
+.security-ambient-two {
+  background: rgba(104, 72, 169, .065) !important;
+  animation: ambientFloatOne 31s ease-in-out infinite !important;
+}
+
+.security-shell .sec-panel,
+.security-shell .sec-metric {
+  position: relative;
+  z-index: 2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .security-shell::after,
+  .security-stars,
+  .security-orb,
+  .security-ambient-one,
+  .security-ambient-two {
+    animation: none !important;
+  }
+}

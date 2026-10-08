@@ -16,6 +16,11 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_minutes: int = 30
     seed_demo_data: bool = True
+    ai_service_url: str = "http://localhost:8001"
+    ai_timeout_seconds: float = 5.0
+    verify_threshold: int = 50
+    restrict_threshold: int = 70
+    block_threshold: int = 85
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", case_sensitive=False, extra="ignore")
 
     @field_validator("api_v1_prefix")

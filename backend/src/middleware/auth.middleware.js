@@ -5,7 +5,10 @@ import { findSessionById, updateSessionActivity } from "../services/auth/session
 export async function authenticate(req, res, next) {
     try {
         const header = req.headers.authorization || "";
-        if (!header.startsWith("Bearer ")) return res.status(401).json({ error: "Authentication required" });
+
+        if (!header.startsWith("Bearer ")) {
+            return res.status(401).json({ error: "Authentication required" });
+        }
 
         const token = header.slice(7);
         const payload = verifyAccessToken(token);
@@ -19,7 +22,8 @@ export async function authenticate(req, res, next) {
         await updateSessionActivity(session.id);
         req.auth = { user, session, tokenPayload: payload };
         next();
-    } catch {
+    } catch (error) {
+        console.error("AUTH ERROR:", error);
         return res.status(401).json({ error: "Invalid or expired token" });
     }
 }
@@ -28,5 +32,6 @@ export function requireActiveSession(req, res, next) {
     if (!req.auth?.session || req.auth.session.status !== "active") {
         return res.status(403).json({ error: "Active session required" });
     }
+
     next();
 }

@@ -29,13 +29,14 @@ import AdaptiveResponse from "../pages/security/AdaptiveResponse";
 import AICopilot from "../pages/security/AICopilot";
 import SystemHealth from "../pages/security/SystemHealth";
 import SecuritySettings from "../pages/security/Settings";
+import AuthGate from "./AuthGate";
 
 export default function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
 
-      <Route element={<WorkShepherLayout />}>
+      <Route element={<AuthGate><WorkShepherLayout /></AuthGate>}>
         <Route path="/" element={<Dashboard />} />
         <Route path="/tasks" element={<Tasks />} />
         <Route path="/projects" element={<Projects />} />
@@ -49,7 +50,7 @@ export default function AppRoutes() {
         <Route path="/settings" element={<Settings />} />
       </Route>
 
-      <Route element={<SecurityLayout />}>
+      <Route element={<AuthGate security><SecurityLayout /></AuthGate>}>
         <Route path="/security" element={<SecurityOverview />} />
         <Route path="/security/activity" element={<LiveActivity />} />
         <Route path="/security/users" element={<UsersRisk />} />

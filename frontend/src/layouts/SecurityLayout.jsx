@@ -6,7 +6,7 @@ import SecurityTopbar from "../components/security/Topbar";
 export default function SecurityLayout() {
   return (
     <div><InteractionBridge />
-    <div className="app-shell security-shell>
+    <div className="app-shell security-shell">
       <div className="security-grid" />
       <div className="security-stars" />
       <div className="security-scan" />

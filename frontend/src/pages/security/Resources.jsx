@@ -1,11 +1,11 @@
 import { motion } from "motion/react";
 import { Database, ShieldCheck, ShieldOff, Search, RefreshCw } from "lucide-react";
 import { useMemo, useState } from "react";
-import { useSecurityStore } from "../../services/securityStore";
+import { securityStore, useSecurityStore } from "../../services/securityStore";
 
 export default function Resources(){
  const resources=useSecurityStore(s=>s.resources);
- const toggleResource=useSecurityStore(s=>s.toggleResource);
+ const toggleResource=useSecurityStore(()=>securityStore.toggleResource);
  const [query,setQuery]=useState("");
  const filtered=useMemo(()=>resources.filter(r=>[r.name,r.type,r.owner,r.sensitivity].join(" ").toLowerCase().includes(query.toLowerCase())),[resources,query]);
  return <motion.div className="page security-page" initial={{opacity:0,y:10}} animate={{opacity:1,y:0}}>

@@ -1,7 +1,7 @@
 import { motion } from "motion/react";
 import { FlaskConical, History, ToggleLeft, ToggleRight } from "lucide-react";
 import { useMemo, useState } from "react";
-import { useSecurityStore } from "../../services/securityStore";
+import { securityStore, useSecurityStore } from "../../services/securityStore";
 
 function decision(score,policies){
  const enabled=policies.filter(p=>p.enabled).sort((a,b)=>b.threshold-a.threshold);
@@ -9,7 +9,7 @@ function decision(score,policies){
 }
 export default function PolicyEngine(){
  const policies=useSecurityStore(s=>s.policies);
- const togglePolicy=useSecurityStore(s=>s.togglePolicy);
+ const togglePolicy=useSecurityStore(()=>securityStore.togglePolicy);
  const [score,setScore]=useState(72);
  const result=useMemo(()=>decision(score,policies),[score,policies]);
  return <motion.div className="page security-page" initial={{opacity:0,y:10}} animate={{opacity:1,y:0}}>

@@ -1,5 +1,5 @@
 import { Navigate,useLocation } from "react-router-dom";
-import { AUTH_KEY } from "../../api";
+import { AUTH_KEY } from "../api";
 
 export default function AuthGate({security=false,children}){
   const location=useLocation();

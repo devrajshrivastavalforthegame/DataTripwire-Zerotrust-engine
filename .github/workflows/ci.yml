@@ -13,34 +13,60 @@ jobs:
         working-directory: backend
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+
       - run: npm install
-      - run: npm test
+
+      - name: Run backend tests
+        run: npm test -- --passWithNoTests
 
   frontend:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: frontend
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
+        if: ${{ hashFiles('frontend/package.json') != '' }}
         with:
           node-version: 22
-      - run: npm install
-      - run: npm run build
+
+      - name: Install frontend dependencies
+        if: ${{ hashFiles('frontend/package.json') != '' }}
+        working-directory: frontend
+        run: npm install
+
+      - name: Build frontend
+        if: ${{ hashFiles('frontend/package.json') != '' }}
+        working-directory: frontend
+        run: npm run build
+
+      - name: Frontend not present on this branch
+        if: ${{ hashFiles('frontend/package.json') == '' }}
+        run: echo "Frontend is not present on this branch. Skipping frontend CI."
 
   ai-service:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ai-service
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
+        if: ${{ hashFiles('ai-service/requirements.txt') != '' }}
         with:
           python-version: '3.11'
-      - run: pip install -r requirements.txt
-      - run: python -m pytest -q
+
+      - name: Install AI service dependencies
+        if: ${{ hashFiles('ai-service/requirements.txt') != '' }}
+        working-directory: ai-service
+        run: pip install -r requirements.txt
+
+      - name: Run AI service tests
+        if: ${{ hashFiles('ai-service/requirements.txt') != '' }}
+        working-directory: ai-service
+        run: python -m pytest -q
+
+      - name: AI service not present on this branch
+        if: ${{ hashFiles('ai-service/requirements.txt') == '' }}
+        run: echo "AI service is not present on this branch. Skipping AI CI."

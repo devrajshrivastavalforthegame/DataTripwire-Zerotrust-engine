@@ -1,11 +1,11 @@
 import { motion } from "motion/react";
 import { AlertTriangle } from "lucide-react";
 import { useMemo, useState } from "react";
-import { useSecurityStore } from "../../services/securityStore";
+import { securityStore, useSecurityStore } from "../../services/securityStore";
 
 export default function Incidents(){
  const incidents=useSecurityStore(s=>s.incidents);
- const updateIncident=useSecurityStore(s=>s.updateIncident);
+ const updateIncident=useSecurityStore(()=>securityStore.updateIncident);
  const [filter,setFilter]=useState("All");
  const [selected,setSelected]=useState(incidents[0]?.id);
  const rows=useMemo(()=>filter==="All"?incidents:incidents.filter(i=>i.severity===filter),[incidents,filter]);

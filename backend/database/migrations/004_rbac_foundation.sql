@@ -154,6 +154,8 @@ VALUES
     ('team', 'read', 'View team information'),
     ('team', 'manage', 'Manage team information'),
 
+    ('overview', 'read', 'View security dashboard overview'),
+
     -- DataTripwire Security Console
     ('users', 'read', 'View security users'),
     ('users', 'manage', 'Manage security users'),
@@ -265,6 +267,7 @@ AND (
  OR (p.resource = 'response' AND p.action = 'read')
  OR (p.resource = 'copilot' AND p.action = 'read')
  OR (p.resource = 'health' AND p.action = 'read')
+ OR (p.resource = 'overview' AND p.action = 'read')
 )
 ON CONFLICT DO NOTHING;
 
@@ -292,6 +295,7 @@ AND (
  OR (p.resource = 'deception' AND p.action = 'trigger')
  OR (p.resource = 'copilot' AND p.action = 'read')
  OR (p.resource = 'health' AND p.action = 'read')
+ OR (p.resource = 'overview' AND p.action = 'read')
 )
 ON CONFLICT DO NOTHING;
 

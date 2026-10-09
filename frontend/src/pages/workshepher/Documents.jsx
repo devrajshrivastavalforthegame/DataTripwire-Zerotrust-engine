@@ -11,13 +11,13 @@ function DocumentIcon({ type }) {
 }
 
 export default function Documents() {
-  const [resources,setResources]=useState([]);
+  const [resources,setResources]=useState([]); const [q,setQ]=useState(""); const [filter,setFilter]=useState("All");
   const [busy,setBusy]=useState("");
   const [message,setMessage]=useState("");
   const [result,setResult]=useState(null);
 
   useEffect(()=>{api.resources().then(x=>setResources(x.resources||x||[])).catch(e=>setMessage(e.message));},[]);
-  const docs=useMemo(()=>resources,[resources]);
+  const docs=useMemo(()=>resources.filter(d=>(filter==="All"||filter==="Protected"&&d.sensitivity!=="PUBLIC"||filter==="Recent")&&[d.name,d.resource_type,d.sensitivity,d.description].join(" ").toLowerCase().includes(q.toLowerCase())),[resources,q,filter]);
 
   async function access(doc,action){
     if(!doc.id){setMessage("Resource is not initialized yet. Restart the backend after database setup.");return;}
@@ -35,8 +35,8 @@ export default function Documents() {
     {message&&<div className={message.includes("allowed")?"ws-success-banner":"ws-login-error"}><ShieldAlert size={16}/>{message}</div>}
 
     <div className="ws-document-toolbar">
-      <div className="ws-search-field"><Search size={17}/><input placeholder="Search documents and protected resources..." /><kbd>? K</kbd></div>
-      <div className="ws-toolbar-filters"><button className="active">All</button><button>Recent</button><button>Protected</button></div>
+      <div className="ws-search-field"><Search size={17}/><input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search documents and protected resources..." /><kbd>? K</kbd></div>
+      <div className="ws-toolbar-filters">{["All","Recent","Protected"].map(x=><button key={x} className={filter===x?"active":""} onClick={()=>setFilter(x)}>{x}</button>)}</div>
     </div>
     <section className="ws-panel ws-documents-panel">
       <div className="ws-document-table-head"><span>Name</span><span>Type</span><span>Sensitivity</span><span>Updated</span><span /></div>

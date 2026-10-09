@@ -8,7 +8,7 @@ import { getOverview } from "../controllers/overview.controller.js";
 import { listActivity } from "../controllers/activity.controller.js";
 import { listUsersRisk } from "../controllers/users-risk.controller.js";
 import { listResources } from "../controllers/resources.controller.js";
-import { listIncidents } from "../controllers/incidents.controller.js";
+import { listIncidents, resolveIncident } from "../controllers/incidents.controller.js";
 import {
     getPolicies,
     getAdaptiveResponses,
@@ -41,6 +41,8 @@ router.get(
     requirePermission("incidents", "read"),
     listIncidents
 );
+router.post("/incidents/:id/resolve", authenticate, requirePermission("incidents", "resolve"), resolveIncident);
+
 router.get(
     "/resources",
     authenticate,

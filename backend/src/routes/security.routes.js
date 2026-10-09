@@ -18,9 +18,13 @@ import {
 } from "../controllers/response.controller.js";
 import { requirePermission } from "../middleware/authorization.middleware.js";
 import { requireProtectedAction } from "../middleware/policy.middleware.js";
+import { getExposure } from "../controllers/exposure.controller.js";
 
 const router = Router();
 router.use(authenticate, requirePortal("admin"));
+
+// Data-exposure analytics are admin-only and require audit-read permission.
+router.get("/data-exposure", requirePermission("audit", "read"), getExposure);
 
 router.post(
     "/events",

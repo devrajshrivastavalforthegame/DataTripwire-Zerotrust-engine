@@ -39,7 +39,7 @@ export async function sendSecurityIncidentAlert({ user, event, risk, decision, r
         <tr><td><b>Risk Score</b></td><td><strong>${risk.score}/100</strong></td></tr>
         <tr><td><b>Decision</b></td><td><strong>${escapeHtml(decision)}</strong></td></tr>
       </table>
-      <h3>Risk factors</h3><ul>${factors || "<li>No individual factors recorded.</li>"}</ul>
+      <h3>Decision flow</h3><p><b>Login → Behaviour Event → Risk Score → Policy Evaluation → Enforcement → Audit</b></p><h3>Risk factors</h3><ul>${factors || "<li>No individual factors recorded.</li>"}</ul>
       <p style="font-size:12px;color:#667085">This alert contains security telemetry from an authorized enterprise security system. The employee-facing application does not expose the internal SOC workflow.</p>
     </div>`;
 

@@ -1,4 +1,4 @@
-﻿@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap");
+﻿@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap");
 
 :root {
   --ws-bg: #f7f9fc;
@@ -8317,8 +8317,6 @@ input:focus-visible {
 /* ============================================================
    DATATRIPWIRE SOC — PROFESSIONAL MOTION SYSTEM
    ============================================================ */
-
-@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap");
 
 .security-shell {
   --soc-font: "IBM Plex Sans", "Inter", system-ui, sans-serif;

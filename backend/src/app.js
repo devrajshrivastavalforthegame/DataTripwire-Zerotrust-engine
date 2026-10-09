@@ -7,6 +7,7 @@ import { checkDatabaseConnection } from "./config/database.js";
 import authRoutes from "./routes/auth.routes.js";
 import behaviorRoutes from "./routes/behavior.routes.js";
 import securityRoutes from "./routes/security.routes.js";
+import resourceRoutes from "./routes/resource.routes.js";
 import { setupSwagger } from "./docs/swagger.js";
 
 const app = express();
@@ -20,7 +21,8 @@ app.get("/health/db",async(_,res)=>{try{await checkDatabaseConnection();res.json
 app.use("/api/v1/auth",authRoutes);
 app.use("/api/v1/behavior",behaviorRoutes);
 app.use("/api/v1/security",securityRoutes);
+app.use("/api/v1/resources",resourceRoutes);
 setupSwagger(app);
 app.use((err,_req,res,_next)=>{console.error("Unhandled backend error",err);res.status(500).json({error:"Internal server error"});});
-const port = process.env.BACKEND_PORT || 3000;
+const port=process.env.BACKEND_PORT||3000;
 app.listen(port,()=>console.log(`DataTripwire backend running on port ${port}`));

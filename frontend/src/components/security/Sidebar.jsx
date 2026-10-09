@@ -25,7 +25,7 @@ const navigation = [
   { label: "Resources", path: "/security/resources", icon: Database },
   { label: "Incidents", path: "/security/incidents", icon: Siren },
   { label: "Policy Engine", path: "/security/policy", icon: GitBranch },
-  { label: "RBAC", path: "/security/rbac", icon: LockKeyhole },
+  { label: "Access Governance", path: "/security/rbac", icon: LockKeyhole },
   { label: "Audit Logs", path: "/security/audit", icon: FileClock },
   { label: "Adaptive Response", path: "/security/response", icon: Zap },
   { label: "AI Security Copilot", path: "/security/copilot", icon: Bot },

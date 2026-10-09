@@ -1,11 +1,27 @@
-import { useEffect, useMemo, useState } from "react";
-import { Activity, AlertTriangle, ArrowDownToLine, Database, FileWarning, RefreshCw, ShieldAlert, ShieldCheck } from "lucide-react";
+import { useEffect, useState } from "react";
+import {
+  Activity,
+  AlertTriangle,
+  ArrowDownToLine,
+  ArrowUpRight,
+  ArrowDownRight,
+  Copy,
+  Database,
+  FileWarning,
+  RefreshCw,
+  ShieldAlert,
+  ShieldCheck,
+  TrendingUp,
+  TrendingDown,
+  Minus
+} from "lucide-react";
 import { api } from "../../api";
 import "./DataExposureRisk.css";
 import { dataExposureDemo } from "../../fixtures/dataExposureDemo";
 
 const DEMO_ENABLED = import.meta.env.DEV && import.meta.env.VITE_DATA_EXPOSURE_DEMO === "true";
 const number = value => value == null || !Number.isFinite(Number(value)) ? "—" : Number(value).toLocaleString();
+const score = value => value == null || !Number.isFinite(Number(value)) ? null : Math.max(0, Math.min(100, Number(value)));
 const formatBytes = value => {
   if (value == null || !Number.isFinite(Number(value))) return null;
   const bytes = Number(value);
@@ -14,19 +30,112 @@ const formatBytes = value => {
   if (bytes < 1_000_000_000) return `${(bytes / 1_000_000).toFixed(1)} MB`;
   return `${(bytes / 1_000_000_000).toFixed(2)} GB`;
 };
-const severityFor = score => score == null || !Number.isFinite(Number(score)) ? "unknown" : score >= 70 ? "high" : score >= 40 ? "medium" : "low";
+const severityClass = value => {
+  const normalized = String(value || "").toUpperCase();
+  return ["LOW", "MEDIUM", "HIGH", "CRITICAL"].includes(normalized) ? normalized.toLowerCase() : "unknown";
+};
+const trendLabel = value => ({
+  NO_ACTIVITY: "No activity",
+  RISING: "Rising",
+  DECLINING: "Declining",
+  STABLE: "Stable"
+}[String(value || "").toUpperCase()] || "Trend unavailable");
+const formatDate = value => {
+  if (!value) return "No event time recorded";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "Timestamp unavailable" : date.toLocaleString();
+};
+const titleFromCode = value => String(value || "").replaceAll("_", " ");
 
 function Metric({ icon: Icon, label, value, detail }) {
-  return <div className="dt-exposure-metric"><span className="dt-exposure-metric-icon"><Icon size={15}/></span><span className="dt-exposure-metric-label">{label}</span><strong>{value}</strong>{detail && <small>{detail}</small>}</div>;
+  return <div className="dt-exposure-metric">
+    <span className="dt-exposure-metric-icon"><Icon size={15} /></span>
+    <span className="dt-exposure-metric-label">{label}</span>
+    <strong>{value}</strong>
+    {detail && <small>{detail}</small>}
+  </div>;
 }
 
-function RiskScore({ label, value, primary = false }) {
-  const severity = severityFor(value);
-  return <div className={`dt-exposure-score ${primary ? "primary" : ""} ${severity}`}>
-    <div className="dt-exposure-score-heading"><span>{label}</span><strong>{value == null ? "—" : `${number(value)} / 100`}</strong></div>
-    <div className="dt-exposure-score-track" aria-label={`${label}: ${value == null ? "not available" : value}`}><i style={{ width: value == null ? "0%" : `${Math.max(0, Math.min(100, Number(value)))}%` }}/></div>
-    <span className={`dt-exposure-severity ${severity}`}>{severity === "unknown" ? "Not available" : severity + " risk"}</span>
+function RiskScore({ label, value, severity }) {
+  const numeric = score(value);
+  const tone = severityClass(severity);
+  return <div className={`dt-exposure-score primary ${tone}`}>
+    <div className="dt-exposure-score-heading">
+      <span>{label}</span>
+      <strong>{numeric == null ? "—" : `${number(numeric)} / 100`}</strong>
+    </div>
+    <div className="dt-exposure-score-track" aria-label={`${label}: ${numeric == null ? "not available" : numeric}`}>
+      <i style={{ width: numeric == null ? "0%" : `${numeric}%` }} />
+    </div>
+    <span className={`dt-exposure-severity ${tone}`}>{tone === "unknown" ? "Severity unavailable" : severity}</span>
   </div>;
+}
+
+function Trend({ trend }) {
+  const direction = String(trend?.direction || "").toUpperCase();
+  const Icon = direction === "RISING" ? TrendingUp : direction === "DECLINING" ? TrendingDown : direction === "STABLE" || direction === "NO_ACTIVITY" ? Minus : Activity;
+  const tone = direction === "RISING" ? "danger" : direction === "DECLINING" ? "positive" : "neutral";
+  return <span className={`dt-exposure-trend ${tone}`}><Icon size={13} />{trendLabel(direction)}{trend?.activity_signal_delta == null ? "" : ` · signal Δ ${number(trend.activity_signal_delta)}`}</span>;
+}
+
+function UserAssessment({ user, windowKey }) {
+  const current = user.current || {};
+  const previous = user.previous || {};
+  const metrics = current.metrics || {};
+  const priorMetrics = previous.metrics || {};
+  const factors = Array.isArray(current.factors) ? current.factors : [];
+  const bytes = formatBytes(metrics.recorded_bytes);
+  const previousRisk = score(previous.data_exposure_risk);
+  const currentRisk = score(current.data_exposure_risk);
+  const lastEvent = formatDate(user.last_event_at);
+
+  return <article className="dt-exposure-user-card">
+    <div className="dt-exposure-user-heading">
+      <div className="dt-exposure-user-identity">
+        <span className="dt-exposure-user-avatar"><ShieldAlert size={17} /></span>
+        <div>
+          <h3>{user.username || "Unnamed user"}</h3>
+          <p>{user.role || "Role unavailable"} <span>·</span> {user.user_id || "User ID unavailable"}</p>
+        </div>
+      </div>
+      <Trend trend={user.trend} />
+    </div>
+
+    <div className="dt-exposure-user-score-grid">
+      <RiskScore label={`Current exposure · ${windowKey}`} value={currentRisk} severity={current.severity} />
+      <div className="dt-exposure-previous-score">
+        <span>Previous equal-length window</span>
+        <strong>{previousRisk == null ? "—" : `${number(previousRisk)} / 100`}</strong>
+        <span className={`dt-exposure-severity ${severityClass(previous.severity)}`}>{previous.severity || "Severity unavailable"}</span>
+        <small>Comparison: preceding {windowKey}</small>
+      </div>
+    </div>
+
+    <div className="dt-exposure-metrics">
+      <Metric icon={FileWarning} label="Sensitive accesses" value={number(metrics.sensitive_access_count)} detail={`Previous: ${number(priorMetrics.sensitive_access_count)}`} />
+      <Metric icon={ArrowDownToLine} label="Sensitive downloads" value={number(metrics.sensitive_download_count)} detail={`Previous: ${number(priorMetrics.sensitive_download_count)}`} />
+      <Metric icon={Copy} label="Sensitive copies" value={number(metrics.sensitive_copy_count)} detail={`Previous: ${number(priorMetrics.sensitive_copy_count)}`} />
+      <Metric icon={Activity} label="Sensitive exports" value={number(metrics.sensitive_export_count)} detail={`Previous: ${number(priorMetrics.sensitive_export_count)}`} />
+      <Metric icon={ArrowDownToLine} label="Bulk downloads" value={number(metrics.sensitive_bulk_download_count)} detail={`Previous: ${number(priorMetrics.sensitive_bulk_download_count)}`} />
+      <Metric icon={Database} label="Unique sensitive resources" value={number(metrics.unique_sensitive_resources)} detail={`Previous: ${number(priorMetrics.unique_sensitive_resources)}`} />
+      <Metric icon={Database} label="Recorded data volume" value={bytes || "Not captured"} detail={metrics.byte_volume_status === "NOT_CAPTURED" || metrics.recorded_bytes == null ? "Backend does not collect byte volume" : "Reported by backend"} />
+    </div>
+
+    <div className="dt-exposure-evidence">
+      <div className="dt-exposure-evidence-title"><ShieldCheck size={15} /><strong>Risk factors and explanation</strong><span>{factors.length} factor{factors.length === 1 ? "" : "s"}</span></div>
+      {factors.length ? <div className="dt-exposure-factors">
+        {factors.map((factor, index) => <div className="dt-exposure-factor" key={`${factor.code || "factor"}-${index}`}>
+          <div><strong>{titleFromCode(factor.code)}</strong>{factor.points != null && <span>+{number(factor.points)} points</span>}</div>
+          {factor.detail && <p>{factor.detail}</p>}
+        </div>)}
+      </div> : <p>No risk factors were supplied for the current window.</p>}
+    </div>
+
+    <div className="dt-exposure-footnote">
+      <span>Last matching event: <strong>{lastEvent}</strong></span>
+      <span>Risk model: <strong>Explainable heuristic</strong></span>
+    </div>
+  </article>;
 }
 
 export default function DataExposureRisk() {
@@ -39,21 +148,19 @@ export default function DataExposureRisk() {
     setStatus("loading");
     setError("");
     try {
-      const response = await api.securityDataExposure(windowKey);
-      if (!response || !response.metrics) {
-        setPayload(null);
-        setStatus("empty");
-        return;
+      const response = await api.securityDataExposure(windowKey, 50);
+      if (!response || !Array.isArray(response.users) || !Number.isFinite(Number(response.count))) {
+        throw new Error("The data-exposure API returned a response that does not match DATA_EXPOSURE_API_CONTRACT.md.");
       }
       setPayload(response);
       setStatus("ready");
     } catch (err) {
       if (DEMO_ENABLED) {
-        setPayload({ ...dataExposureDemo, window: windowKey, demo: true });
+        setPayload({ ...dataExposureDemo, window: { key: windowKey }, demo: true });
         setStatus("ready");
       } else {
         setPayload(null);
-        setError(err?.message || "Could not load data-exposure metrics.");
+        setError(err?.message || "Could not load data-exposure report.");
         setStatus(err?.status === 404 ? "unavailable" : "error");
       }
     }
@@ -61,26 +168,54 @@ export default function DataExposureRisk() {
 
   useEffect(() => { load(); }, [windowKey]);
 
-  const metrics = payload?.metrics || {};
-  const reasons = useMemo(() => Array.isArray(payload?.reason_codes) ? payload.reason_codes : [], [payload]);
-  const bytes = formatBytes(metrics.recorded_bytes);
-  const decision = payload?.decision;
-  const decisionTone = ["BLOCK", "RESTRICT"].includes(String(decision || "").toUpperCase()) ? "danger" : ["VERIFY", "CHALLENGE"].includes(String(decision || "").toUpperCase()) ? "warning" : "neutral";
+  const users = Array.isArray(payload?.users) ? payload.users : [];
+  const isEmpty = status === "ready" && (Number(payload?.count) === 0 || users.length === 0);
+  const windowLabel = payload?.window?.key || windowKey;
 
   return <section className="sec-panel dt-exposure-panel" aria-labelledby="dt-exposure-title">
     <div className="sec-panel-header dt-exposure-header">
-      <div><span className="sec-section-label">INSIDER DATA RISK</span><h2 id="dt-exposure-title">Data Exposure Risk</h2><p>Data access can be risky even when sign-in behaviour looks normal.</p></div>
-      <div className="dt-exposure-controls"><label htmlFor="dt-exposure-window">Time window</label><select id="dt-exposure-window" value={windowKey} onChange={e => setWindowKey(e.target.value)}><option value="24h">Previous 24 hours</option><option value="7d">Previous 7 days</option></select><button className="sec-secondary-button" onClick={load} disabled={status === "loading"} aria-label="Refresh data exposure metrics"><RefreshCw size={13}/>Refresh</button></div>
+      <div>
+        <span className="sec-section-label">INSIDER DATA RISK</span>
+        <h2 id="dt-exposure-title">Data Exposure Risk</h2>
+        <p>Per-user exposure from sensitive-resource activity—even when sign-in behaviour looks normal.</p>
+      </div>
+      <div className="dt-exposure-controls">
+        <label htmlFor="dt-exposure-window">Comparison window</label>
+        <select id="dt-exposure-window" value={windowKey} onChange={event => setWindowKey(event.target.value)}>
+          <option value="24h">Last 24 hours</option>
+          <option value="7d">Last 7 days</option>
+          <option value="30d">Last 30 days</option>
+        </select>
+        <button className="sec-secondary-button" onClick={load} disabled={status === "loading"} aria-label="Refresh data exposure report"><RefreshCw size={13} />Refresh</button>
+      </div>
     </div>
-    {payload?.demo && <div className="dt-exposure-demo"><AlertTriangle size={14}/> DEMO DATA — illustrative fixture only; not live employee telemetry.</div>}
-    {status === "loading" && <div className="dt-exposure-state"><span className="dt-exposure-spinner"/><strong>Loading exposure evidence…</strong><span>Requesting the selected window from the security API.</span></div>}
-    {(status === "error" || status === "unavailable") && <div className="dt-exposure-state error"><ShieldAlert size={20}/><strong>{status === "unavailable" ? "Data exposure API not connected" : "Exposure metrics unavailable"}</strong><span>{error}</span><small>{status === "unavailable" ? "Confirm the endpoint and response contract with Devraj and Rohith. No sample scores are shown in live mode." : "Check the API service and your access, then refresh."}</small><button className="sec-secondary-button" onClick={load}>Try again</button></div>}
-    {status === "empty" && <div className="dt-exposure-state"><Database size={22}/><strong>No exposure metrics for this window</strong><span>The API returned no metrics. This is not interpreted as zero risk.</span></div>}
-    {status === "ready" && payload && <div className="dt-exposure-content">
-      <div className="dt-exposure-score-grid"><RiskScore label="Data exposure risk" value={payload.data_exposure_risk} primary/><RiskScore label="Behaviour risk" value={payload.behavior_risk}/><RiskScore label="Overall risk" value={payload.overall_risk}/><div className="dt-exposure-decision"><span>BACKEND POLICY DECISION</span><strong className={decisionTone}>{decision || "Not provided"}</strong><small>Displayed from the API response; not calculated in the browser.</small></div></div>
-      <div className="dt-exposure-metrics"><Metric icon={FileWarning} label="Sensitive accesses" value={number(metrics.sensitive_access_count)}/><Metric icon={ArrowDownToLine} label="Downloads" value={number(metrics.download_count)}/><Metric icon={Activity} label="Exports" value={number(metrics.export_count)}/><Metric icon={Database} label="Unique sensitive resources" value={number(metrics.unique_resources)}/>{bytes && <Metric icon={Database} label="Recorded data volume" value={bytes} detail="Recorded by backend"/>}</div>
-      <div className="dt-exposure-evidence"><div className="dt-exposure-evidence-title"><ShieldCheck size={15}/><strong>Why it was flagged</strong><span>{reasons.length} reason code{reasons.length === 1 ? "" : "s"}</span></div>{reasons.length ? <div className="dt-exposure-reasons">{reasons.map(code => <span key={code}>{String(code).replaceAll("_", " ")}</span>)}</div> : <p>No reason codes were supplied by the API.</p>}{Array.isArray(payload.evidence) && payload.evidence.length > 0 && <ul className="dt-exposure-evidence-list">{payload.evidence.slice(0, 5).map((item, index) => <li key={item.id || index}><strong>{item.action || item.event_type || "Recorded event"}</strong><span>{item.resource_name || item.resource || "Resource not specified"}</span><time>{item.timestamp ? new Date(item.timestamp).toLocaleString() : "Timestamp unavailable"}</time></li>)}</ul>}</div>
-      <div className="dt-exposure-footnote"><span>Window: <strong>{payload.window || windowKey}</strong></span><span>Subject: <strong>{payload.user_id || "Aggregate"}</strong></span><span>Missing values are shown as unavailable, never assumed to be zero.</span></div>
+
+    {payload?.demo && <div className="dt-exposure-demo"><AlertTriangle size={14} /> DEMO DATA — illustrative fixture only; not live employee telemetry.</div>}
+
+    {status === "loading" && <div className="dt-exposure-state"><span className="dt-exposure-spinner" /><strong>Loading per-user exposure report…</strong><span>Requesting the selected comparison window from the security API.</span></div>}
+
+    {(status === "error" || status === "unavailable") && <div className="dt-exposure-state error">
+      <ShieldAlert size={20} />
+      <strong>{status === "unavailable" ? "Data exposure API not found" : "Exposure report unavailable"}</strong>
+      <span>{error}</span>
+      {status === "error" && <small>{error.includes("403") || error.toLowerCase().includes("permission") ? "This report requires the users:read permission. Check the signed-in account." : "Check the API service and your access, then refresh."}</small>}
+      <button className="sec-secondary-button" onClick={load}>Try again</button>
+    </div>}
+
+    {isEmpty && <div className="dt-exposure-state"><Database size={22} /><strong>No matching sensitive-resource activity</strong><span>No users matched the report's sensitive-resource activity criteria in either comparison window. This does not mean every user has zero risk.</span></div>}
+
+    {status === "ready" && payload && !isEmpty && <div className="dt-exposure-content">
+      <div className="dt-exposure-report-summary">
+        <div><span>USERS WITH MATCHING ACTIVITY</span><strong>{number(payload.count)}</strong><small>Maximum {number(50)} users requested</small></div>
+        <div><span>REPORT WINDOW</span><strong>{windowLabel}</strong><small>Compared with preceding equal-length window</small></div>
+        <div><span>GENERATED</span><strong>{formatDate(payload.generated_at)}</strong><small>Backend report timestamp</small></div>
+      </div>
+      {payload.telemetry_note && <div className="dt-exposure-contract-note"><AlertTriangle size={14} /><span>{payload.telemetry_note}</span></div>}
+      {payload.risk_note && <p className="dt-exposure-risk-note">{payload.risk_note}</p>}
+      <div className="dt-exposure-users">
+        {users.map(user => <UserAssessment key={user.user_id} user={user} windowKey={windowLabel} />)}
+      </div>
+      <div className="dt-exposure-footnote"><span>Severity labels and factors are supplied by the backend.</span><span>Byte volume is unavailable when not captured; it is never treated as zero.</span></div>
     </div>}
   </section>;
 }

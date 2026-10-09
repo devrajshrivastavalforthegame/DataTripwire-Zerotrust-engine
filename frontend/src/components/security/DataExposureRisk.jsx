@@ -3,8 +3,6 @@ import {
   Activity,
   AlertTriangle,
   ArrowDownToLine,
-  ArrowUpRight,
-  ArrowDownRight,
   Copy,
   Database,
   FileWarning,

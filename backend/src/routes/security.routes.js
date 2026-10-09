@@ -1,4 +1,5 @@
 import { Router } from "express";
+import rateLimit from "express-rate-limit";
 import { authenticate, requireActiveSession, requirePortal } from "../middleware/auth.middleware.js";
 import { behaviorController } from "../controllers/behavior.controller.js";
 import { analyzeCopilotRequest } from "../controllers/copilot.controller.js";
@@ -22,10 +23,11 @@ import { requireProtectedAction } from "../middleware/policy.middleware.js";
 import { getExposure } from "../controllers/exposure.controller.js";
 
 const router = Router();
+const copilotLimiter = rateLimit({ windowMs: 60 * 1000, max: 30, standardHeaders: true, legacyHeaders: false });
 router.use(authenticate, requirePortal("admin"));
 
 // AI analysis is advisory and available only to authenticated, active admin sessions.
-router.post("/copilot/analyze", requireActiveSession, requirePermission("overview", "read"), analyzeCopilotRequest);
+router.post("/copilot/analyze", copilotLimiter, requireActiveSession, requirePermission("overview", "read"), analyzeCopilotRequest);
 
 // Data-exposure analytics are admin-only and require audit-read permission.
 router.get("/data-exposure", requirePermission("audit", "read"), getExposure);

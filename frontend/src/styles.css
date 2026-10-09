@@ -8605,3 +8605,120 @@ input:focus-visible {
     transition-duration: 0.001ms !important;
   }
 }
+
+
+/* Final SOC interaction polish */
+.security-shell,
+.security-shell button,
+.security-shell a,
+.security-shell input,
+.security-shell select,
+.security-shell textarea {
+  cursor: none;
+}
+
+.soc-route-transition {
+  animation: socRouteEnter 420ms cubic-bezier(.16,1,.3,1) both;
+  will-change: opacity, transform, filter;
+}
+
+@keyframes socRouteEnter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0) scale(.996);
+    filter: blur(3px);
+  }
+  55% {
+    opacity: .92;
+    filter: blur(.5px);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: blur(0);
+  }
+}
+
+.security-shell .security-panel,
+.security-shell .security-metric-card,
+.security-shell .response-level,
+.security-shell .sec-resource-card,
+.security-shell .sec-incident-card {
+  transform: translateZ(0);
+  will-change: transform, border-color, box-shadow;
+}
+
+.security-shell .security-panel::after,
+.security-shell .security-metric-card::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(
+    110deg,
+    transparent 15%,
+    rgba(197, 148, 255, 0.075) 48%,
+    transparent 78%
+  );
+  transform: translateX(-120%);
+  transition: transform 850ms cubic-bezier(.2,.7,.2,1);
+}
+
+.security-shell .security-panel:hover::after,
+.security-shell .security-metric-card:hover::after {
+  transform: translateX(120%);
+}
+
+.security-shell .sidebar-link.active::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1px solid rgba(184, 126, 244, 0.10);
+  box-shadow: inset 0 0 24px rgba(145, 80, 208, 0.035);
+  pointer-events: none;
+  animation: socActiveSweep 700ms cubic-bezier(.2,.8,.2,1) both;
+}
+
+@keyframes socActiveSweep {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.security-shell .monitoring-pulse,
+.security-shell .security-live-indicator span {
+  box-shadow: 0 0 0 0 rgba(91, 220, 175, .28);
+}
+
+.security-shell .security-topbar {
+  transition: background .35s ease, border-color .35s ease, box-shadow .35s ease;
+}
+
+.security-shell .security-topbar:focus-within {
+  background: rgba(13, 10, 21, .80);
+  border-bottom-color: rgba(190, 139, 238, .18);
+  box-shadow: 0 8px 30px rgba(44, 17, 68, .10);
+}
+
+@media (max-width: 800px) {
+  .security-shell,
+  .security-shell button,
+  .security-shell a,
+  .security-shell input,
+  .security-shell select,
+  .security-shell textarea {
+    cursor: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .soc-route-transition {
+    animation: none;
+  }
+
+  .security-shell .security-panel::after,
+  .security-shell .security-metric-card::after {
+    display: none;
+  }
+}

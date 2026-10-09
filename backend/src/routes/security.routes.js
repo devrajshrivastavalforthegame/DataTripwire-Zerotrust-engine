@@ -30,14 +30,12 @@ router.post(
 
 router.get(
     "/overview",
-    authenticate,
     requirePermission("overview", "read"),
     getOverview
 );
 
 router.get(
     "/incidents",
-    authenticate,
     requirePermission("incidents", "read"),
     listIncidents
 );
@@ -45,14 +43,12 @@ router.post("/incidents/:id/resolve", requireActiveSession, requirePermission("i
 
 router.get(
     "/resources",
-    authenticate,
     requirePermission("resources", "read"),
     listResources
 );
 
 router.patch(
     "/resources/:id",
-    authenticate,
     requireActiveSession,
     requirePermission("resources", "manage"),
     requireProtectedAction,
@@ -60,20 +56,17 @@ router.patch(
 );
 router.get(
     "/users-risk",
-    authenticate,
     requirePermission("users", "read"),
     listUsersRisk
 );
 router.get(
     "/activity",
-    authenticate,
     requirePermission("audit", "read"),
     listActivity
 );
 
 router.post(
     "/baseline/rebuild",
-    authenticate,
     requirePermission("baseline", "manage"),
     requireProtectedAction,
     requireActiveSession,
@@ -82,35 +75,30 @@ router.post(
 
 router.get(
     "/baseline",
-    authenticate,
     requirePermission("baseline", "read"),
     getBaseline
 );
 
 router.get(
     "/sessions",
-    authenticate,
     requirePermission("sessions", "read"),
     listSessions
 );
 
 router.get(
     "/sessions/:sessionId/timeline",
-    authenticate,
     requirePermission("sessions", "read"),
     sessionTimeline
 );
 
 router.get(
     "/audit",
-    authenticate,
     requirePermission("audit", "read"),
     listAudit
 );
 
 router.get(
     "/finance/archive/backup",
-    authenticate,
     requirePermission("deception", "trigger"),
     requireProtectedAction,
     requireActiveSession,
@@ -119,21 +107,18 @@ router.get(
 
 router.get(
     "/policies",
-    authenticate,
     requirePermission("policies", "read"),
     getPolicies
 );
 
 router.get(
     "/responses",
-    authenticate,
     requirePermission("response", "read"),
     getAdaptiveResponses
 );
 
 router.post(
     "/sessions/:sessionId/restrict",
-    authenticate,
     requireActiveSession,
     requirePermission("sessions", "restrict"),
     requireProtectedAction,
@@ -142,7 +127,6 @@ router.post(
 
 router.post(
     "/sessions/:sessionId/quarantine",
-    authenticate,
     requireActiveSession,
     requirePermission("sessions", "quarantine"),
     requireProtectedAction,
@@ -151,7 +135,6 @@ router.post(
 
 router.post(
     "/sessions/:sessionId/release",
-    authenticate,
     requireActiveSession,
     requirePermission("sessions", "release"),
     requireProtectedAction,

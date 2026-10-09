@@ -9,6 +9,7 @@ import { listActivity } from "../controllers/activity.controller.js";
 import { listUsersRisk } from "../controllers/users-risk.controller.js";
 import { listResources, updateSecurityResource } from "../controllers/resources.controller.js";
 import { listIncidents, resolveIncident } from "../controllers/incidents.controller.js";
+import { getExposure } from "../controllers/exposure.controller.js";
 import {
     getPolicies,
     getAdaptiveResponses,
@@ -21,6 +22,8 @@ import { requireProtectedAction } from "../middleware/policy.middleware.js";
 
 const router = Router();
 router.use(authenticate, requirePortal("admin"));
+
+router.get("/data-exposure", requirePermission("audit", "read"), getExposure);
 
 router.post(
     "/events",

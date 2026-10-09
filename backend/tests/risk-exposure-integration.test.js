@@ -78,7 +78,7 @@ describe("risk fusion with insider data exposure", () => {
     test("evaluateAndSave persists fused score and evidence factors", async () => {
         query.mockImplementation(async sql => {
             if (sql.includes("SELECT * FROM user_baselines")) return { rows: [] };
-            if (sql.includes("SELECT risk_score, sts_score")) return { rows: [{ risk_score: 10 }] };
+            if (sql.includes("SELECT behavior_score, risk_score, sts_score")) return { rows: [{ behavior_score: 10, risk_score: 10 }] };
             if (sql.includes("INSERT INTO risk_decisions")) return { rows: [{ id: "decision-1" }] };
             throw new Error("Unexpected SQL in test: " + sql);
         });
@@ -96,19 +96,55 @@ describe("risk fusion with insider data exposure", () => {
         });
 
         expect(result.score).toBe(72);
+        expect(result.behaviorScore).toBe(5);
         expect(result.decision).toBe("RESTRICT");
         const insertCall = query.mock.calls.find(([sql]) => sql.includes("INSERT INTO risk_decisions"));
-        expect(insertCall[1][3]).toBe(72);
-        expect(insertCall[1][4]).toBe("RESTRICT");
-        expect(JSON.parse(insertCall[1][12])).toEqual(
+        expect(insertCall[1][3]).toBe(72); // fused risk_score
+        expect(insertCall[1][4]).toBe(5);  // independent behavior_score
+        expect(insertCall[1][5]).toBe("RESTRICT");
+        expect(JSON.parse(insertCall[1][13])).toEqual(
             expect.arrayContaining([expect.objectContaining({ type: "data_exposure_risk" })])
         );
+    });
+
+    test("does not carry a previous fused exposure score into behavior history", async () => {
+        query.mockImplementation(async sql => {
+            if (sql.includes("SELECT * FROM user_baselines")) return { rows: [] };
+            if (sql.includes("SELECT behavior_score, risk_score, sts_score")) {
+                return { rows: [{ behavior_score: 12, risk_score: 72 }] };
+            }
+            if (sql.includes("INSERT INTO risk_decisions")) return { rows: [{ id: "decision-2" }] };
+            throw new Error("Unexpected SQL in test: " + sql);
+        });
+        getUserDataExposureRisk.mockResolvedValue({
+            score: 0,
+            severity: "LOW",
+            factors: []
+        });
+
+        const result = await evaluateAndSave({
+            userId: "user-1",
+            sessionId: "session-1",
+            event: { id: "event-2", request_count: 1 }
+        });
+
+        // Behavior decays from 12 to 7; it must not decay from fused score 72.
+        expect(result.previousScore).toBe(12);
+        expect(result.behaviorScore).toBe(7);
+        expect(result.dataExposureScore).toBe(0);
+        expect(result.score).toBe(7);
+        expect(result.decision).toBe("ALLOW");
+
+        const insertCall = query.mock.calls.find(([sql]) => sql.includes("INSERT INTO risk_decisions"));
+        expect(insertCall[1][3]).toBe(7); // fused risk_score
+        expect(insertCall[1][4]).toBe(7); // behavior_score
+        expect(insertCall[1][8]).toBe(12); // previous behavior score
     });
 
     test("falls back to the existing behavior path when exposure analytics fails", async () => {
         query.mockImplementation(async sql => {
             if (sql.includes("SELECT * FROM user_baselines")) return { rows: [] };
-            if (sql.includes("SELECT risk_score, sts_score")) return { rows: [{ risk_score: 10 }] };
+            if (sql.includes("SELECT behavior_score, risk_score, sts_score")) return { rows: [{ behavior_score: 10, risk_score: 10 }] };
             if (sql.includes("INSERT INTO risk_decisions")) return { rows: [{ id: "decision-1" }] };
             throw new Error("Unexpected SQL in test");
         });

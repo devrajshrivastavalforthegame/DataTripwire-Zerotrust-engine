@@ -1,10 +1,8 @@
 import { Router } from "express";
 import { authenticate } from "../middleware/auth.middleware.js";
 import { requirePermission } from "../middleware/authorization.middleware.js";
-import { getRBAC, toggleRolePermission, assignRole, removeRole } from "../controllers/rbac.controller.js";
+import { getRBAC, toggleRolePermission } from "../controllers/rbac.controller.js";
 const router=Router();
 router.get("/",authenticate,requirePermission("rbac","read"),getRBAC);
 router.post("/roles/:roleId/permissions/:permissionId/toggle",authenticate,requirePermission("rbac","manage"),toggleRolePermission);
-router.post("/roles/assign",authenticate,requirePermission("rbac","manage"),assignRole);
-router.post("/roles/remove",authenticate,requirePermission("rbac","manage"),removeRole);
 export default router;

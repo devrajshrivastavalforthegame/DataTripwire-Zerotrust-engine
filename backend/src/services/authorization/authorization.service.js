@@ -108,13 +108,13 @@ export async function hasResponsibility(
     return false;
   }
 
-  // A grant at a broader scope includes narrower resources, never the reverse.
+  // A broader grant may cover narrower scopes; narrower grants never expand upward.
   // These values must stay aligned with chk_user_responsibility_scope in migration 004.
   const scopeGrants = {
-    OWN: ["OWN", "ASSIGNED", "TEAM", "ORGANIZATION"],
-    ASSIGNED: ["ASSIGNED", "TEAM", "ORGANIZATION"],
-    TEAM: ["TEAM", "ORGANIZATION"],
-    ORGANIZATION: ["ORGANIZATION"]
+    OWN: ["OWN"],
+    ASSIGNED: ["OWN", "ASSIGNED"],
+    TEAM: ["OWN", "ASSIGNED", "TEAM"],
+    ORGANIZATION: ["OWN", "ASSIGNED", "TEAM", "ORGANIZATION"]
   };
 
   const values = [userId, responsibility];

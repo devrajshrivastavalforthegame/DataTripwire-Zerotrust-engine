@@ -15,6 +15,7 @@ export default function Login() {
   const [email,setEmail] = useState("");
   const [password,setPassword] = useState("");
   const [error,setError] = useState("");
+  const [notice,setNotice] = useState("");
   const [loading,setLoading] = useState(false);
 
   return (
@@ -112,10 +113,11 @@ export default function Login() {
                 <span>Remember me</span>
               </label>
 
-              <button type="button">Forgot password?</button>
+              <button type="button" onClick={()=>{setNotice("Password recovery is organization-managed. Contact your workspace administrator.");setError("");}}>Forgot password?</button>
             </div>
 
             {error && <div className="ws-login-error">{error}</div>}
+            {notice && <div className="ws-success-banner">{notice}</div>}
             <button className="ws-login-button" type="submit" disabled={loading}>
               {loading ? "Signing in..." : "Sign in"}
               {!loading && <ArrowRight size={17} />}
@@ -126,7 +128,7 @@ export default function Login() {
             <span>or</span>
           </div>
 
-          <button className="ws-sso-button">
+          <button type="button" className="ws-sso-button" onClick={()=>setNotice("Organization SSO is not configured for this prototype tenant. Use your workspace email and password.")}>
             <ShieldCheck size={17} />
             Continue with Organization SSO
           </button>

@@ -1,5 +1,6 @@
-﻿import AppRoutes from "./routes/AppRoutes";
+import AppRoutes from "./routes/AppRoutes";
+import StepUpGate from "./components/common/StepUpGate";
 
 export default function App() {
-  return <AppRoutes />;
+  return <StepUpGate><AppRoutes /></StepUpGate>;
 }

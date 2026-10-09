@@ -10,6 +10,7 @@ export async function listActivity(req, res) {
                 be.created_at,
                 be.event_type,
                 be.user_id,
+                u.username,
                 u.email,
                 u.role,
                 be.action,

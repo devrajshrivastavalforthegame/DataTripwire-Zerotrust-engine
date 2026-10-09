@@ -7,6 +7,7 @@ import { listSessions, sessionTimeline, listAudit } from "../controllers/securit
 import { getOverview } from "../controllers/overview.controller.js";
 import { listActivity } from "../controllers/activity.controller.js";
 import { listUsersRisk } from "../controllers/users-risk.controller.js";
+import { getDataExposure } from "../controllers/data-exposure.controller.js";
 import { listResources } from "../controllers/resources.controller.js";
 import { listIncidents } from "../controllers/incidents.controller.js";
 import {
@@ -52,6 +53,13 @@ router.get(
     authenticate,
     requirePermission("users", "read"),
     listUsersRisk
+);
+
+router.get(
+    "/data-exposure",
+    authenticate,
+    requirePermission("users", "read"),
+    getDataExposure
 );
 router.get(
     "/activity",

@@ -34,6 +34,6 @@ export async function behaviorController(req,res) {
         } catch { ai = {assessment:"unavailable",confidence:0,recommended_action:risk.decision,explanation:"AI unavailable; deterministic backend policy remains authoritative",fallback:true}; }
         await query(`INSERT INTO audit_logs (user_id,session_id,event_type,action,severity,details,ip_address) VALUES ($1,$2,'behavior_risk',$3,$4,$5,$6)`,
             [req.auth.user.id,req.auth.session.id,risk.decision,risk.score>=70?"high":risk.score>=30?"medium":"info",JSON.stringify({risk,policy,ai}),req.ip]);
-        return res.status(201).json({event,risk:{score:risk.score,sts:risk.sts,ats:risk.ats,decision:risk.decision,factors:risk.factors,explanation:risk.explanation},policy,ai});
+        return res.status(201).json({event,risk:{score:risk.score,behaviorScore:risk.behaviorScore,dataExposureScore:risk.dataExposureScore,dataExposureSeverity:risk.dataExposureSeverity,sts:risk.sts,ats:risk.ats,decision:risk.decision,factors:risk.factors,explanation:risk.explanation},policy,ai});
     } catch (error) { console.error("Behavior processing error",error); return res.status(500).json({error:"Unable to process behavior event"}); }
 }

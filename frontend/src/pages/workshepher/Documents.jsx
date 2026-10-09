@@ -17,10 +17,7 @@ export default function Documents() {
   const [result,setResult]=useState(null);
 
   useEffect(()=>{api.resources().then(x=>setResources(x.resources||x||[])).catch(e=>setMessage(e.message));},[]);
-  const docs=useMemo(()=>resources.length?resources:[
-    {id:"",name:"Office Credentials Vault",resource_type:"CREDENTIALS",sensitivity:"RESTRICTED",description:"Controlled confidential office credential resource.",active:true},
-    {id:"",name:"Q4 Financial Report",resource_type:"DOCUMENT",sensitivity:"CONFIDENTIAL",description:"Confidential finance report.",active:true}
-  ],[resources]);
+  const docs=useMemo(()=>resources,[resources]);
 
   async function access(doc,action){
     if(!doc.id){setMessage("Resource is not initialized yet. Restart the backend after database setup.");return;}

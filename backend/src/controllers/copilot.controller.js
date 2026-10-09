@@ -19,7 +19,11 @@ export async function analyzeCopilotRequest(req, res) {
         session_status: req.auth.session.status
       }
     };
-    const analysis = await analyzeWithAI(payload);
+    const result = await analyzeWithAI(payload);
+    // The AI service returns an envelope containing its own `analysis` object.
+    // Return the inner assessment so the frontend can read explanation, risk_level,
+    // recommendation, confidence, and signals directly.
+    const analysis = result?.analysis ?? result;
     return res.json({ analysis });
   } catch (error) {
     console.error("Copilot analysis failed:", error);

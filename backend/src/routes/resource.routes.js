@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { authenticate, requireActiveSession } from "../middleware/auth.middleware.js";
+import { requireProtectedAction } from "../middleware/policy.middleware.js";
 import {
     requirePermission,
     requireResourceAccessPermission
@@ -12,6 +13,6 @@ const router = Router();
 router.get("/", authenticate, requirePermission("documents", "read"), listResources);
 
 // Enforce session state and the permission required by the requested access action.
-router.post("/:id/access", authenticate, requireActiveSession, requireResourceAccessPermission, accessProtectedResource);
+router.post("/:id/access", authenticate, requireActiveSession, requireProtectedAction, requireResourceAccessPermission, accessProtectedResource);
 
 export default router;

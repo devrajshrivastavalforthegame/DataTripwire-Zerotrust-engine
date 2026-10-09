@@ -24,7 +24,6 @@ router.use(authenticate, requirePortal("admin"));
 
 router.post(
     "/events",
-    authenticate,
     requireActiveSession,
     behaviorController
 );

@@ -2,6 +2,14 @@ import { verifyAccessToken } from "../services/auth/token.service.js";
 import { findUserById } from "../services/auth/user.repository.js";
 import { findSessionById, updateSessionActivity } from "../services/auth/session.repository.js";
 
+const ROLE_PORTAL = {
+    employee: "employee",
+    manager: "employee",
+    security_analyst: "admin",
+    security_manager: "admin",
+    system_admin: "admin"
+};
+
 export async function authenticate(req, res, next) {
     try {
         const header = req.headers.authorization || "";
@@ -15,8 +23,14 @@ export async function authenticate(req, res, next) {
         const user = await findUserById(payload.sub);
         const session = await findSessionById(payload.sessionId);
 
-        if (!user || user.status !== "active" || !session || session.user_id !== user.id || session.status === "ended" || !["employee", "admin"].includes(session.portal) || payload.portal !== session.portal) {
-            return res.status(401).json({ error: "Invalid session" });
+        const requiredPortal = ROLE_PORTAL[String(user?.role || "").trim().toLowerCase()];
+
+        if (!user || user.status !== "active" || !session ||
+            session.user_id !== user.id || session.status === "ended" ||
+            !["employee", "admin"].includes(session.portal) ||
+            payload.portal !== session.portal ||
+            requiredPortal !== session.portal) {
+            return res.status(401).json({ error: "Invalid session", code: "PORTAL_SESSION_INVALID" });
         }
 
         await updateSessionActivity(session.id);

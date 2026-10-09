@@ -1,5 +1,5 @@
 import {useEffect,useState} from "react";
-import {api} from "../api";
+import {api} from "../../api";
 export default function InteractionBridge(){
  const [toast,setToast]=useState("");
  useEffect(()=>{

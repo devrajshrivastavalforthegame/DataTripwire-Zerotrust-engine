@@ -12,7 +12,9 @@ async function request(url,options={}){
 }
 export const api={
   health:()=>request(API_BASE_URL+"/health"),
-  login:async(payload)=>{const body=await request(API_BASE_URL+"/api/v1/auth/login",{method:"POST",body:JSON.stringify(payload)});localStorage.setItem(AUTH_KEY,body.access_token);localStorage.setItem("datatripwire.user.v1",JSON.stringify(body.user));return body},
+  login:async(payload)=>{const body=await request(API_BASE_URL+"/api/v1/auth/login",{method:"POST",body:JSON.stringify(payload)});localStorage.setItem(AUTH_KEY,body.accessToken);
+const user={...body.user,roles:[body.user.role, ...(body.user.role==="security_manager"?["Security Manager"]:body.user.role==="security_analyst"?["Security Analyst"]:[])]};
+localStorage.setItem("datatripwire.user.v1",JSON.stringify(user));return {...body,user}},
   me:()=>request(API_BASE_URL+"/api/v1/auth/me"),
   adminUsers:()=>request(API_BASE_URL+"/api/v1/admin/users"),
   adminRoles:()=>request(API_BASE_URL+"/api/v1/admin/roles"),

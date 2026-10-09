@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db import get_db
@@ -8,7 +8,7 @@ from app.security import User, create_access_token, get_current_user, verify_pas
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 class LoginRequest(BaseModel):
-    email: EmailStr
+    email: str
     password: str = Field(min_length=8, max_length=128)
 
 def summary(user: User):

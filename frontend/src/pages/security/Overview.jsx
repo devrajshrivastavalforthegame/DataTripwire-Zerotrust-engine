@@ -5,9 +5,9 @@ import { api } from "../../api";
 
 function Metric({label,value,Icon}){return <motion.div className="sec-metric" initial={{opacity:0,y:10}} animate={{opacity:1,y:0}}><div className="sec-metric-icon"><Icon size={17}/></div><strong>{value}</strong><span>{label}</span></motion.div>}
 export default function Overview(){
- const [data,setData]=useState(null),[activity,setActivity]=useState([]);
- const load=async()=>{try{const [o,a]=await Promise.all([api.securityOverview(),api.securityActivity()]);setData(o);setActivity(a.activity||[])}catch(e){console.error(e)}};
- useEffect(()=>{load();const t=setInterval(load,1500);return()=>clearInterval(t)},[]);
+ const [data,setData]=useState(null),[activity,setActivity]=useState([]),[exposure,setExposure]=useState(null),[exposureError,setExposureError]=useState("");
+ const load=async()=>{try{const [o,a]=await Promise.all([api.securityOverview(),api.securityActivity()]);setData(o);setActivity(a.activity||[]);try{setExposure(await api.securityExposure());setExposureError("")}catch(e){setExposureError(e.message||"Exposure analytics unavailable")}}catch(e){console.error(e)}};
+ useEffect(()=>{load();const t=setInterval(load,5000);return()=>clearInterval(t)},[]);
  const m=data?.metrics||{};
  const trust=data?.continuousTrust||{};
  return <div className="sec-page">
@@ -19,6 +19,16 @@ export default function Overview(){
    </section>
    <section className="sec-panel"><div className="sec-panel-header"><div><span className="sec-section-label">RECENT ACTIVITY</span><h2>Latest decisions</h2></div></div><div className="sec-event-table"><div className="sec-event-head"><span>USER</span><span>ACTION</span><span>RISK</span><span>DECISION</span><span>TIME</span></div>{activity.slice(0,6).map(e=><div className="sec-event-row" key={e.id}><strong>{e.username||e.email}</strong><span>{e.action||e.event_type}<small>{e.resource||"—"}</small></span><div className={"sec-risk-number "+(Number(e.risk_score)>=80?"high":Number(e.risk_score)>=50?"medium":"low")}>{e.risk_score??0}</div><span className={"sec-decision "+String(e.decision||"ALLOW").toLowerCase()}>{e.decision||"ALLOW"}</span><time>{new Date(e.created_at).toLocaleTimeString()}</time></div>)}</div></section>
   </div>
+  <section className="sec-panel">
+   <div className="sec-panel-header"><div><span className="sec-section-label">DATA EXPOSURE</span><h2>Cumulative exposure risk</h2></div><span className="sec-live-dot">30 DAYS</span></div>
+   {exposureError?<div className="sec-empty-state"><strong>Exposure analytics unavailable</strong><span>{exposureError}</span></div>:<div className="sec-detail-grid">
+    <div className="sec-detail-block"><span>DATA BREACH RISK</span><strong>{exposure?.overall?.score ?? "—"}{exposure?.overall?.score != null ? "/100" : ""}</strong></div>
+    <div className="sec-detail-block"><span>RISK LEVEL</span><strong>{exposure?.overall?.level ?? "Loading"}</strong></div>
+    <div className="sec-detail-block"><span>30-DAY EVENTS</span><strong>{exposure?.windows?.days30?.eventCount ?? "—"}</strong></div>
+    <div className="sec-detail-block"><span>MEASURED TRANSFER</span><strong>{exposure?.windows?.days30?.totalBytes == null ? "Not measured" : exposure.windows.days30.totalBytes.toLocaleString()+" bytes"}</strong></div>
+   </div>}
+   <p className="sec-muted-note">Exposure scores are deterministic prototype indicators. Transfer volume is shown only when measured by the application.</p>
+  </section>
   <section className="sec-panel"><div className="sec-panel-header"><div><span className="sec-section-label">DECISION PIPELINE</span><h2>Continuous enforcement</h2></div></div><div className="sec-flow">{[["01","Authenticated","Identity established"],["02","Evaluated","Behaviour analysed"],["03","Risk Score","Trust recalculated"],["04","Policy Decision","Deterministic policy"],["05","Response","Access adapted"],["06","Audit","Evidence recorded"]].map((s,i)=><div className="sec-flow-step" key={s[1]}><div className="sec-flow-number">{s[0]}</div><div><strong>{s[1]}</strong><span>{s[2]}</span></div>{i<5&&<i/>}</div>)}</div></section>
  </div>
 }

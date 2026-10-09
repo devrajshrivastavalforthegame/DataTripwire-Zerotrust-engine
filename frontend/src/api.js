@@ -52,6 +52,7 @@ export const api={
   resources:()=>request(API_BASE_URL+"/api/v1/resources"),
   accessResource:(id,payload)=>request(API_BASE_URL+"/api/v1/resources/"+id+"/access",{method:"POST",body:JSON.stringify(payload)}),
   securityOverview:()=>request(API_BASE_URL+"/api/v1/security/overview"),
+  securityExposure:()=>request(API_BASE_URL+"/api/v1/security/data-exposure"),
   securityActivity:()=>request(API_BASE_URL+"/api/v1/security/activity"),
   securityIncidents:async()=>{const x=await request(API_BASE_URL+"/api/v1/security/incidents");return x.incidents||[]},
   resolveIncident:(id)=>request(API_BASE_URL+"/api/v1/security/incidents/"+encodeURIComponent(id)+"/resolve",{method:"POST"}),

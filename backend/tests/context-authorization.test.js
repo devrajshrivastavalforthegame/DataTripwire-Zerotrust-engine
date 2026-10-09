@@ -6,7 +6,7 @@ jest.unstable_mockModule("../src/config/database.js", () => ({
     default: { query }
 }));
 
-const { authorizeContext } = await import("../src/services/authorization/authorization.service.js");
+const { authorizeContext, hasResponsibility } = await import("../src/services/authorization/authorization.service.js");
 
 function configureQuery({ permission = true, responsibility = true, resource = null } = {}) {
     query.mockImplementation(async (sql) => {
@@ -51,7 +51,7 @@ describe("authorizeContext", () => {
             resource: "documents",
             action: "read",
             responsibility: "Finance",
-            scope: "DEPARTMENT"
+            scope: "TEAM"
         });
 
         expect(result).toMatchObject({
@@ -146,7 +146,7 @@ describe("authorizeContext", () => {
             resource: " Documents ",
             action: " READ ",
             responsibility: "Finance",
-            scope: "DEPARTMENT",
+            scope: "ASSIGNED",
             resourceId: "resource-1",
             task: "review",
             session: { status: "active", step_up_required: false }
@@ -164,5 +164,36 @@ describe("authorizeContext", () => {
             },
             resource
         });
+    });
+});
+
+describe("hasResponsibility scope hierarchy", () => {
+    beforeEach(() => query.mockReset());
+
+    test.each([
+        ["OWN", ["OWN", "ASSIGNED", "TEAM", "ORGANIZATION"]],
+        ["ASSIGNED", ["ASSIGNED", "TEAM", "ORGANIZATION"]],
+        ["TEAM", ["TEAM", "ORGANIZATION"]],
+        ["ORGANIZATION", ["ORGANIZATION"]]
+    ])("maps %s grants to its permitted scope levels", async (requiredScope, expectedScopes) => {
+        query.mockResolvedValue({ rows: [{ allowed: true }] });
+
+        await expect(hasResponsibility("user-1", "Finance", requiredScope)).resolves.toBe(true);
+        expect(query).toHaveBeenCalledWith(
+            expect.stringContaining("ur.scope = ANY($3::text[])"),
+            ["user-1", "Finance", expectedScopes]
+        );
+    });
+
+    test("fails closed for unsupported scope values without querying the database", async () => {
+        await expect(hasResponsibility("user-1", "Finance", "DEPARTMENT")).resolves.toBe(false);
+        expect(query).not.toHaveBeenCalled();
+    });
+
+    test("allows a matching responsibility without requiring a scope", async () => {
+        query.mockResolvedValue({ rows: [{ allowed: true }] });
+
+        await expect(hasResponsibility("user-1", "Finance")).resolves.toBe(true);
+        expect(query).toHaveBeenCalledWith(expect.not.stringContaining("ur.scope = ANY"), ["user-1", "Finance"]);
     });
 });

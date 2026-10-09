@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { authenticate, requireActiveSession } from "../middleware/auth.middleware.js";
+import { authenticate, requireActiveSession, requirePortal } from "../middleware/auth.middleware.js";
 import {
     requirePermission,
     requireWorkspaceActionPermission,
@@ -12,7 +12,7 @@ import {
 } from "../controllers/workspace.controller.js";
 
 const router = Router();
-router.use(authenticate);
+router.use(authenticate, requirePortal("employee"));
 
 // State/profile/settings are scoped to the authenticated user's own workspace.
 router.get("/state", getState);

@@ -8,7 +8,8 @@ import {
 import { listResources } from "../controllers/resources.controller.js";
 import { accessProtectedResource } from "../controllers/resource-access.controller.js";
 
-const router = Router();\nrouter.use(authenticate, requirePortal("employee"));
+const router = Router();
+router.use(authenticate, requirePortal("employee"));
 
 router.get("/", requirePermission("documents", "read"), listResources);
 

@@ -1,20 +1,7 @@
-﻿import { NavLink } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import {
-  ShieldCheck,
-  LayoutDashboard,
-  Activity,
-  Users,
-  Monitor,
-  Database,
-  Siren,
-  ScrollText,
-  GitBranch,
-  LockKeyhole,
-  FileClock,
-  Zap,
-  Bot,
-  HeartPulse,
-  Settings,
+  ShieldCheck, LayoutDashboard, Activity, Users, Monitor, Database, Siren,
+  GitBranch, LockKeyhole, FileClock, Zap, Bot, HeartPulse, Settings
 } from "lucide-react";
 
 const navigation = [
@@ -25,7 +12,7 @@ const navigation = [
   { label: "Resources", path: "/security/resources", icon: Database },
   { label: "Incidents", path: "/security/incidents", icon: Siren },
   { label: "Policy Engine", path: "/security/policy", icon: GitBranch },
-  { label: "RBAC", path: "/security/rbac", icon: LockKeyhole },
+  { label: "Access Governance", path: "/security/rbac", icon: LockKeyhole },
   { label: "Audit Logs", path: "/security/audit", icon: FileClock },
   { label: "Adaptive Response", path: "/security/response", icon: Zap },
   { label: "AI Security Copilot", path: "/security/copilot", icon: Bot },
@@ -37,10 +24,7 @@ export default function SecuritySidebar() {
   return (
     <aside className="sidebar security-sidebar">
       <div className="security-brand">
-        <div className="security-brand-icon">
-          <ShieldCheck size={20} />
-        </div>
-
+        <div className="security-brand-icon"><ShieldCheck size={20} /></div>
         <div>
           <div className="security-brand-name">DataTripwire</div>
           <div className="security-brand-caption">SECURITY CONSOLE</div>
@@ -54,15 +38,12 @@ export default function SecuritySidebar() {
 
       <nav className="sidebar-navigation">
         <div className="nav-section-label">SECURITY OPERATIONS</div>
-
         {navigation.map(({ label, path, icon: Icon, end }) => (
           <NavLink
             key={path}
             to={path}
             end={end}
-            className={({ isActive }) =>
-              `sidebar-link ${isActive ? "active" : ""}`
-            }
+            className={({ isActive }) => `sidebar-link ${isActive ? "active" : ""}`}
           >
             <Icon size={17} strokeWidth={1.8} />
             <span>{label}</span>
@@ -72,11 +53,7 @@ export default function SecuritySidebar() {
 
       <div className="security-admin">
         <div className="admin-avatar">AD</div>
-
-        <div>
-          <strong>Security Admin</strong>
-          <span>Administrator</span>
-        </div>
+        <div><strong>Security Admin</strong><span>Administrator</span></div>
       </div>
     </aside>
   );

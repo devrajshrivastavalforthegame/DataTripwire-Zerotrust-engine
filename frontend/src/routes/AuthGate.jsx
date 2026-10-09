@@ -8,7 +8,7 @@ export default function AuthGate({security=false,children}){
   if(security){
     try{
       const user=JSON.parse(localStorage.getItem("datatripwire.user.v1")||"null");
-      const allowed=user?.roles?.some(r=>["Security Manager","Security Analyst","Auditor"].includes(r));
+      const allowed=user?.roles?.some(r=>["Security Manager","Security Analyst","Auditor","security_manager","security_analyst"].includes(r));
       if(!allowed) return <Navigate to="/" replace />;
     }catch{return <Navigate to="/" replace />}
   }

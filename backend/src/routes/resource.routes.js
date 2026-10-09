@@ -4,7 +4,7 @@ import {
     requirePermission,
     requireResourceAccessPermission
 } from "../middleware/authorization.middleware.js";
-import { listResources, updateSecurityResource } from "../controllers/resources.controller.js";
+import { listResources } from "../controllers/resources.controller.js";
 import { accessProtectedResource } from "../controllers/resource-access.controller.js";
 
 const router = Router();

@@ -16,6 +16,19 @@ if (!(Test-Path ".\docker-compose.yml")) { throw "Run from repository root." }
 foreach ($file in @(".\backend\database\migrations\005_portal_sessions.sql",".\backend\database\migrations\006_behavior_score.sql")) {
   if (!(Test-Path $file)) { throw "Missing $file" }
 }
+Write-Output "Running available automated build/tests..."
+if (Test-Path ".\\backend\\node_modules") {
+  npm --prefix backend test
+  Check "Backend automated test suite" ($LASTEXITCODE -eq 0) "npm --prefix backend test"
+} else {
+  Write-Output "Backend unit tests skipped: backend/node_modules is not installed in this checkout."
+}
+if (Test-Path ".\\frontend\\package.json") {
+  npm --prefix frontend run build
+  Check "Frontend production build" ($LASTEXITCODE -eq 0) "npm --prefix frontend run build"
+} else {
+  Write-Output "Frontend build skipped: this branch checkout has no frontend/ directory."
+}
 Write-Output "Applying local idempotent migrations..."
 foreach ($file in @(".\backend\database\migrations\005_portal_sessions.sql",".\backend\database\migrations\006_behavior_score.sql")) {
   Get-Content -Raw $file | docker compose exec -T postgres psql -X -v ON_ERROR_STOP=1 -U datatripwire -d datatripwire

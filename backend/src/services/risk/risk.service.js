@@ -24,14 +24,26 @@ function inHourRange(hour, start, end) {
     return start <= end ? hour >= start && hour <= end : hour >= start || hour <= end;
 }
 
-export function calculateScores({ event, baseline, previousScore = 0, isDecoy = false }) {
+export function calculateScores({
+    event,
+    baseline,
+    previousScore = 0,
+    isDecoy = false,
+    additionalFactors = [],
+    previousFactors = []
+}) {
     const factors = [];
     let increase = 0;
     const knownDevices = Array.isArray(baseline?.known_devices) ? baseline.known_devices : [];
     const knownLocations = Array.isArray(baseline?.known_locations) ? baseline.known_locations : [];
     const commonTypes = Array.isArray(baseline?.common_resource_types) ? baseline.common_resource_types : [];
 
-    const add = (type, points, detail) => { increase += points; factors.push({ type, points, detail }); };
+    const add = (type, points, detail) => {
+        if (factors.some((factor) => factor.type === type)) return;
+        increase += points;
+        factors.push({ type, points, detail });
+    };
+
     if (event.device_fingerprint && !knownDevices.includes(event.device_fingerprint)) add("new_device", RISK_POINTS.newDevice, "New device fingerprint detected.");
     if (event.location && !knownLocations.includes(event.location)) add("new_location", RISK_POINTS.newLocation, "New location detected.");
     const avg = Number(baseline?.avg_requests_per_minute || baseline?.avg_request_count || 0);
@@ -43,32 +55,78 @@ export function calculateScores({ event, baseline, previousScore = 0, isDecoy = 
     if (event.scope && event.scope !== "assigned" && event.scope !== "own") add("scope_violation", RISK_POINTS.scopeViolation, "Action scope is outside the normal assignment.");
     if (isDecoy) add("decoy_access", RISK_POINTS.decoyAccess, "Controlled deception resource was accessed.");
 
-    const newScore = Math.min(100, Math.max(0, increase ? Number(previousScore) + increase : Number(previousScore) - 5));
-    const ats = Math.min(100, Math.max(0, factors.reduce((sum, f) => sum + f.points, 0) + (isDecoy ? 25 : 0)));
-    const sts = Math.max(0, 100 - newScore);
+    for (const factor of additionalFactors) {
+        const points = Number(factor?.points);
+        if (
+            typeof factor?.type === "string" &&
+            typeof factor?.detail === "string" &&
+            Number.isFinite(points) &&
+            points > 0
+        ) {
+            add(factor.type, points, factor.detail);
+        }
+    }
+
+    const previousFactorTypes = new Set(
+        (Array.isArray(previousFactors) ? previousFactors : [])
+            .map((factor) => typeof factor === "string" ? factor : factor?.type)
+            .filter((factorType) => typeof factorType === "string")
+    );
+    const newIncrease = factors
+        .filter((factor) => !previousFactorTypes.has(factor.type))
+        .reduce((sum, factor) => sum + factor.points, 0);
+    const score = Math.min(
+        100,
+        Math.max(0, newIncrease ? Number(previousScore) + newIncrease : Number(previousScore) - 5)
+    );
+    const ats = Math.min(100, Math.max(0, factors.reduce((sum, factor) => sum + factor.points, 0) + (isDecoy ? 25 : 0)));
+    const sts = Math.max(0, 100 - score);
+
     return {
         previousScore: Number(previousScore),
-        score: newScore,
+        score,
         sts,
         ats,
-        decision: isDecoy ? "QUARANTINE" : decisionForScore(newScore),
+        decision: isDecoy ? "QUARANTINE" : decisionForScore(score),
         factors,
-        explanation: factors.length ? factors.map(f => f.detail).join(" ") : "Observed behavior matches the current baseline."
+        explanation: factors.length ? factors.map((factor) => factor.detail).join(" ") : "Observed behavior matches the current baseline."
     };
 }
 
-export async function evaluateAndSave({ userId, sessionId, event, isDecoy = false }) {
+export async function evaluateAndSave({
+    userId,
+    sessionId,
+    event,
+    isDecoy = false,
+    additionalFactors = []
+}) {
     const baselineResult = await query(`SELECT * FROM user_baselines WHERE user_id=$1`, [userId]);
     const baseline = baselineResult.rows[0] ?? null;
-    const previousResult = await query(`SELECT risk_score, sts_score FROM risk_decisions WHERE session_id=$1 ORDER BY created_at DESC LIMIT 1`, [sessionId]);
+    const previousResult = await query(
+        `SELECT risk_score, sts_score, risk_factors FROM risk_decisions WHERE session_id=$1 ORDER BY created_at DESC LIMIT 1`,
+        [sessionId]
+    );
     const previousScore = Number(previousResult.rows[0]?.risk_score ?? 0);
-    const result = calculateScores({ event, baseline, previousScore, isDecoy });
+    let previousFactors = previousResult.rows[0]?.risk_factors ?? [];
+    if (typeof previousFactors === "string") {
+        try { previousFactors = JSON.parse(previousFactors); } catch { previousFactors = []; }
+    }
+
+    const result = calculateScores({
+        event,
+        baseline,
+        previousScore,
+        isDecoy,
+        additionalFactors,
+        previousFactors
+    });
+
     const saved = await query(`
         INSERT INTO risk_decisions
         (user_id,session_id,behavior_event_id,risk_score,decision,reasons,ai_assessment,previous_score,sts_score,ats_score,explanation,policy_id,risk_factors)
         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
         RETURNING *`,
-        [userId, sessionId, event.id, result.score, result.decision, JSON.stringify(result.factors.map(f => f.type)), null,
+        [userId, sessionId, event.id, result.score, result.decision, JSON.stringify(result.factors.map((factor) => factor.type)), null,
          result.previousScore, result.sts, result.ats, result.explanation, "default-zero-trust-v2", JSON.stringify(result.factors)]);
     return { ...result, decisionId: saved.rows[0].id, riskDecision: saved.rows[0] };
 }

@@ -58,6 +58,19 @@ describe("calculateDataExposureRisk", () => {
         expect(result.factors.map(item => item.code)).toContain("SENSITIVE_DATA_MOVEMENT");
     });
 
+    test("adds a first-window trend bonus for a sudden burst of sensitive downloads", () => {
+        const result = calculateDataExposureRisk({
+            sensitive_access_count: 7,
+            sensitive_download_count: 7,
+            unique_sensitive_resources: 1
+        }, 0);
+
+        // Access: 14, movement: 40, first-window burst trend: 10.
+        expect(result.score).toBe(64);
+        expect(result.severity).toBe("HIGH");
+        expect(result.factors.map(item => item.code)).toContain("EXPOSURE_INCREASE");
+    });
+
     test("adds an explainable factor when activity rises", () => {
         const result = calculateDataExposureRisk({
             sensitive_access_count: 8,

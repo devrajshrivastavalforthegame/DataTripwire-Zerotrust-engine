@@ -26,18 +26,14 @@ export default function Documents() {
       const response=await api.accessResource(doc.id,{action});
       setResult(response);
       setMessage(response.allowed?\`Access allowed — risk \${response.risk.score}/100\`:\`Access blocked by continuous trust policy — risk \${response.risk.score}/100\`);
-    }catch(e){setMessage(e.message||"Access request failed.");setResult(e);}
+    }catch(e){setMessage(e.status===403?"This action is temporarily unavailable for your current session.":"We could not complete that action. Please try again.");setResult(e.body||e);}
     finally{setBusy("");}
   }
 
   return <div className="ws-page">
     <PageHeading eyebrow="WORKSPACE" title="Documents" description="Your organization's protected documents and resources." />
     {message&&<div className={message.includes("allowed")?"ws-success-banner":"ws-login-error"}><ShieldAlert size={16}/>{message}</div>}
-    {result?.risk&&<div className="ws-panel" style={{marginBottom:18,padding:18}}>
-      <strong>DataTripwire decision: {result.risk.decision}</strong>
-      <span style={{marginLeft:12}}>Risk {result.risk.score}/100</span>
-      <div style={{marginTop:8}}>{result.risk.explanation}</div>
-    </div>}
+
     <div className="ws-document-toolbar">
       <div className="ws-search-field"><Search size={17}/><input placeholder="Search documents and protected resources..." /><kbd>? K</kbd></div>
       <div className="ws-toolbar-filters"><button className="active">All</button><button>Recent</button><button>Protected</button></div>

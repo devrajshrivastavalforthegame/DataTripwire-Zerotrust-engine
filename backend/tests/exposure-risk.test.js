@@ -27,6 +27,6 @@ describe("calculateExposureRisk", () => {
       { action: "VIEW", classification: "INTERNAL", bytes_transferred: "unknown" },
     ]);
     expect(result.totalBytes).toBeNull();
-    expect(result.sensitiveBytes).toBe(0);
+    expect(result.sensitiveBytes).toBeNull();
   });
 });

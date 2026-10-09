@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "main": "index.js",
   "directories": {
-    "test": "tests"
+    "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --runInBand"
   },
   "scripts": {
-    "test": "jest --runInBand",
+    "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --runInBand",
     "dev": "nodemon src/app.js",
     "start": "node src/app.js",
     "backup": "node src/scripts/backup.js"

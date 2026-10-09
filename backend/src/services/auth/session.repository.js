@@ -5,7 +5,8 @@ export async function createSession({
     ipAddress = null,
     userAgent = null,
     deviceFingerprint = null,
-    location = null
+    location = null,
+    portal
 }) {
     const result = await query(
         `INSERT INTO sessions (
@@ -13,13 +14,15 @@ export async function createSession({
             ip_address,
             user_agent,
             device_fingerprint,
-            location
+            location,
+            portal
          )
-         VALUES ($1, $2, $3, $4, $5)
+         VALUES ($1, $2, $3, $4, $5, $6)
          RETURNING
             id,
             user_id,
             status,
+            portal,
             ip_address,
             user_agent,
             device_fingerprint,
@@ -33,7 +36,8 @@ export async function createSession({
             ipAddress,
             userAgent,
             deviceFingerprint,
-            location
+            location,
+            portal
         ]
     );
 
@@ -46,6 +50,7 @@ export async function findSessionById(sessionId) {
             id,
             user_id,
             status,
+            portal,
             ip_address,
             user_agent,
             device_fingerprint,

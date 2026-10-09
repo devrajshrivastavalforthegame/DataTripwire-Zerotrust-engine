@@ -66,3 +66,16 @@ export async function createUser({
 
     return result.rows[0];
 }
+
+
+// Read current RBAC assignments from the database; never trust JWT role claims for portal eligibility.
+export async function getUserRoleSlugs(userId) {
+    const result = await query(
+        `SELECT r.slug
+         FROM user_roles ur
+         JOIN roles r ON r.id = ur.role_id
+         WHERE ur.user_id = $1`,
+        [userId]
+    );
+    return result.rows.map((row) => row.slug);
+}

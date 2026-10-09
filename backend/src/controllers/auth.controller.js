@@ -3,7 +3,7 @@ import { endSession } from "../services/auth/session.repository.js";
 
 export async function loginController(req, res) {
     try {
-        const { email, password, deviceFingerprint, location } = req.body || {};
+        const { email, password, deviceFingerprint, location, portal } = req.body || {};
         if (typeof email !== "string" || typeof password !== "string") {
             return res.status(400).json({ error: "email and password are required" });
         }
@@ -14,11 +14,14 @@ export async function loginController(req, res) {
             ipAddress: req.ip,
             userAgent: req.get("user-agent"),
             deviceFingerprint,
-            location
+            location,
+            portal
         });
         res.json(result);
     } catch (error) {
-        res.status(error.message === "Invalid credentials" ? 401 : 403).json({ error: error.message });
+        const statusCode = error.statusCode
+            || (error.message === "Invalid credentials" ? 401 : 403);
+        res.status(statusCode).json({ error: error.message });
     }
 }
 

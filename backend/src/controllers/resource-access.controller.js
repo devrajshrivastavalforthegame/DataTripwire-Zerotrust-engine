@@ -7,7 +7,7 @@ import { sendSecurityIncidentAlert } from "../services/alert.service.js";
 
 export async function accessProtectedResource(req, res) {
   const { id } = req.params;
-  const { action = "OPEN", deviceFingerprint, location, requestCount = 1 } = req.body || {};
+  const { action = "OPEN" } = req.body || {};
 
   const resourceResult = await query(
     `SELECT id,name,resource_type,sensitivity,description,active
@@ -21,16 +21,22 @@ export async function accessProtectedResource(req, res) {
     return res.status(400).json({ error:"action must be OPEN, DOWNLOAD, or COPY" });
   }
 
+  const requestCountResult = await query(
+    `SELECT COUNT(*)::int AS count FROM behavior_events WHERE session_id = $1 AND created_at >= NOW() - make_interval(mins => 1)`,
+    [req.auth.session.id]
+  );
+  const observedRequestCount = Number(requestCountResult.rows[0]?.count || 0) + 1;
+
   const eventResult = await query(
     `INSERT INTO behavior_events
       (session_id,user_id,event_type,request_count,resource,action,ip_address,device_fingerprint,location,metadata,responsibility,task,scope)
      VALUES ($1,$2,'RESOURCE_ACCESS',$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
      RETURNING *`,
     [
-      req.auth.session.id, req.auth.user.id, Number(requestCount) || 1,
+      req.auth.session.id, req.auth.user.id, observedRequestCount,
       resource.name, String(action).toUpperCase(), req.ip,
-      deviceFingerprint ?? req.auth.session.device_fingerprint ?? null,
-      location ?? req.auth.session.location ?? null,
+      req.auth.session.device_fingerprint ?? null,
+      req.auth.session.location ?? null,
       JSON.stringify({resourceType:resource.resource_type,sensitivity:resource.sensitivity,protected:true}),
       req.auth.user.role, null, "assigned"
     ]
@@ -151,14 +157,14 @@ if (actionPoints > 0) {
       risk_score: risk.score,
       decision: risk.decision,
       reasons: risk.factors.map(f => f.type),
-      device: { is_new: false },
-      location: { is_new: false },
-      time_context: { is_unusual: false },
+      device: { is_new: risk.factors.some((factor) => factor.type === "new_device") },
+      location: { is_new: risk.factors.some((factor) => factor.type === "new_location") },
+      time_context: { is_unusual: risk.factors.some((factor) => factor.type === "unusual_login_time") },
       activity: {
-        requests_per_minute: Number(requestCount) || 1,
+        requests_per_minute: observedRequestCount,
         unique_resources: 1,
-        records_accessed: isHighImpact ? 1 : 0,
-        download_volume_mb: isHighImpact ? 1 : 0,
+        records_accessed: 0,
+        download_volume_mb: 0,
         authorization_failures: 0,
         cross_domain_access: 0
       },
@@ -204,7 +210,7 @@ if (actionPoints > 0) {
         JSON.stringify({
           resource_name: resource.name,
           resource_type: resource.resource_type,
-          request_count: Number(req.body?.request_count) || 1,
+          request_count: observedRequestCount,
           outcome: "allowed",
           measured_bytes: false,
         }),

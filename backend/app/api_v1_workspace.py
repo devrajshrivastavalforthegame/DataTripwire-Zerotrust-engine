@@ -2,7 +2,6 @@ import json
 from datetime import datetime, timezone
 from uuid import uuid4
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db import get_db
@@ -27,28 +26,20 @@ async def row_for(user,db):
         row=WorkspaceState(user_id=user.id,data=json.dumps(DEFAULT),updated_at=datetime.now(timezone.utc)); db.add(row); await db.commit(); await db.refresh(row)
     return row
 
-class WorkspaceActionPayload(BaseModel):
-    action:str=Field(min_length=1,max_length=120)
-    target:str|None=None
-    metadata:dict=dict
-
-class StatePatch(BaseModel):
-    data:dict
-
 @router.get("/state")
 async def get_state(user:User=Depends(get_current_user),db:AsyncSession=Depends(get_db)):
     row=await row_for(user,db)
     return {"data":clean(json.loads(row.data)),"updated_at":row.updated_at.isoformat()}
 
 @router.put("/state")
-async def update_state(payload:StatePatch,user:User=Depends(get_current_user),db:AsyncSession=Depends(get_db)):
+async def update_state(payload:dict,user:User=Depends(get_current_user),db:AsyncSession=Depends(get_db)):
     row=await row_for(user,db)
     data=clean(payload.data); row.data=json.dumps(data); row.updated_at=datetime.now(timezone.utc)
     await db.commit()
     return {"data":data,"updated_at":row.updated_at.isoformat()}
 
 @router.post("/actions")
-async def action(payload:WorkspaceActionPayload,user:User=Depends(get_current_user),db:AsyncSession=Depends(get_db)):
+async def action(payload:dict,user:User=Depends(get_current_user),db:AsyncSession=Depends(get_db)):
     event_id="wsevt-"+uuid4().hex
     db.add(AuditEvent(event_id=event_id,user_id=user.id,session_id=None,action="WORKSPACE:"+payload.action,resource=payload.target or "workspace",sensitivity="Internal",risk_score=0,decision="ALLOW",result="RECORDED",severity="LOW",explanation="Workspace control action recorded.",signals=json.dumps(payload.metadata)))
     await db.commit()

@@ -1,10 +1,12 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import InteractionBridge from "../components/common/InteractionBridge";
 import SecuritySidebar from "../components/security/Sidebar";
 import SecurityTopbar from "../components/security/Topbar";
 import SecurityMotionLayer from "../components/security/SecurityMotionLayer";
 
 export default function SecurityLayout() {
+  const location = useLocation();
+
   return (
     <div><InteractionBridge />
     <SecurityMotionLayer />
@@ -24,7 +26,9 @@ export default function SecurityLayout() {
         <SecurityTopbar />
 
         <section className="page-container security-page-container">
-          <Outlet />
+          <div key={location.pathname} className="soc-route-transition">
+            <Outlet />
+          </div>
         </section>
       </main>
     </div></div>

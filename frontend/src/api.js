@@ -2,7 +2,16 @@ const API_BASE_URL=import.meta.env.VITE_API_BASE_URL||"http://localhost:3000";
 const AI_SERVICE_URL=import.meta.env.VITE_AI_SERVICE_URL||"http://localhost:8000";
 export const AUTH_KEY="datatripwire.auth.v1";
 
-async function request(url,options={}){
+let stepUpHandler = null;
+
+export function registerStepUpHandler(handler) {
+  stepUpHandler = handler;
+  return () => {
+    if (stepUpHandler === handler) stepUpHandler = null;
+  };
+}
+
+async function request(url,options={}, {allowStepUp=true}={}){
   const token=localStorage.getItem(AUTH_KEY);
   const headers={"Content-Type":"application/json",...(options.headers||{})};
   if(token) headers.Authorization="Bearer "+token;
@@ -10,6 +19,15 @@ async function request(url,options={}){
   if(!r.ok){
     let body=null;
     try{body=await r.json()}catch{}
+    if(body?.code==="STEP_UP_REQUIRED" && allowStepUp && stepUpHandler){
+      return stepUpHandler(async password=>{
+        await request(API_BASE_URL+"/api/v1/auth/step-up",{
+          method:"POST",
+          body:JSON.stringify({password})
+        },{allowStepUp:false});
+        return request(url,options,{allowStepUp:false});
+      });
+    }
     const detail=body?.detail?.message||body?.detail||body?.error?.message||body?.error||`Request failed with ${r.status}`;
     const e=new Error(typeof detail==="string"?detail:`Request failed with ${r.status}`);
     e.status=r.status;e.body=body;throw e;

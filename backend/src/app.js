@@ -9,6 +9,8 @@ import behaviorRoutes from "./routes/behavior.routes.js";
 import securityRoutes from "./routes/security.routes.js";
 import resourceRoutes from "./routes/resource.routes.js";
 import { setupSwagger } from "./docs/swagger.js";
+import { seedDemoResources } from "./services/seed.service.js";
+import { ensureDemoUsers } from "./services/demo-seed.service.js";
 
 const app = express();
 app.disable("x-powered-by");
@@ -25,4 +27,8 @@ app.use("/api/v1/resources",resourceRoutes);
 setupSwagger(app);
 app.use((err,_req,res,_next)=>{console.error("Unhandled backend error",err);res.status(500).json({error:"Internal server error"});});
 const port=process.env.BACKEND_PORT||3000;
-app.listen(port,()=>console.log(`DataTripwire backend running on port ${port}`));
+app.listen(port,async()=>{
+  console.log(`DataTripwire backend running on port ${port}`);
+  try { await seedDemoResources(); await ensureDemoUsers(); console.log("Demo security resources/users ready."); }
+  catch (error) { console.error("Demo bootstrap failed:",error); }
+});

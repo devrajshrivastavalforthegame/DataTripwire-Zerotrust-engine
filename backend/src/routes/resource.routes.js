@@ -8,6 +8,6 @@ import { accessProtectedResource } from "../controllers/resource-access.controll
 const router = Router();
 
 router.get("/", authenticate, requirePermission("documents","read"), listResources);
-router.post("/:id/access", authenticate, requirePermission("documents","download"), requireActiveSession, accessProtectedResource);
+router.post("/:id/access", authenticate, requirePermission("documents","download"), requireProtectedAction, requireActiveSession, accessProtectedResource);
 
 export default router;

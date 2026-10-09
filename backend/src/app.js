@@ -50,6 +50,19 @@ app.use((err,_req,res,_next)=>{console.error("Unhandled backend error",err);res.
 const port=process.env.BACKEND_PORT||3000;
 app.listen(port,async()=>{
   console.log(`DataTripwire backend running on port ${port}`);
-  try { await seedDemoResources(); await ensureDemoUsers(); console.log("Demo security resources/users ready."); }
-  catch (error) { console.error("Demo bootstrap failed:",error); }
+  const isProduction = String(process.env.NODE_ENV || "").toLowerCase() === "production";
+  const demoSeedEnabled = process.env.ENABLE_DEMO_SEED === "true";
+
+  if (isProduction || !demoSeedEnabled) {
+    console.log("Demo bootstrap skipped (production or ENABLE_DEMO_SEED is not explicitly true).");
+    return;
+  }
+
+  try {
+    await seedDemoResources();
+    await ensureDemoUsers();
+    console.log("Demo security resources/users ready.");
+  } catch (error) {
+    console.error("Demo bootstrap failed:",error);
+  }
 });

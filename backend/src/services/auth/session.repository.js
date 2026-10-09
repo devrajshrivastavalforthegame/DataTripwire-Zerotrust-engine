@@ -2,6 +2,7 @@ import { query } from "../../config/database.js";
 
 export async function createSession({
     userId,
+    portal = "employee",
     ipAddress = null,
     userAgent = null,
     deviceFingerprint = null,
@@ -10,15 +11,17 @@ export async function createSession({
     const result = await query(
         `INSERT INTO sessions (
             user_id,
+            portal,
             ip_address,
             user_agent,
             device_fingerprint,
             location
          )
-         VALUES ($1, $2, $3, $4, $5)
+         VALUES ($1, $2, $3, $4, $5, $6)
          RETURNING
             id,
             user_id,
+            portal,
             status,
             ip_address,
             user_agent,
@@ -30,6 +33,7 @@ export async function createSession({
             last_activity_at`,
         [
             userId,
+            portal,
             ipAddress,
             userAgent,
             deviceFingerprint,
@@ -45,6 +49,7 @@ export async function findSessionById(sessionId) {
         `SELECT
             id,
             user_id,
+            portal,
             status,
             ip_address,
             user_agent,

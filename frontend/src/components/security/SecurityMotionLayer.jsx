@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 
 const INTERACTIVE_SELECTOR =
-  "a,button,input,textarea,select,[role="button"],[data-cursor-hover]";
+  'a,button,input,textarea,select,[role="button"],[data-cursor-hover]';
 
 export default function SecurityMotionLayer() {
   const dotRef = useRef(null);

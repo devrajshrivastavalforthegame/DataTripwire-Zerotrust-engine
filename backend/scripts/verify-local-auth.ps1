@@ -71,7 +71,7 @@ foreach ($a in $accounts) {
     Check "$($a.Name) token invalidation" $false "Skipped: no token"
     continue
   }
-  $headers = @{Authorization:"Bearer $token"}
+  $headers = @{ Authorization = "Bearer $token" }
   if ($a.Name -eq "Admin") { $adminToken=$token }
   try {
     $me = Invoke-RestMethod "http://127.0.0.1:3000/api/v1/auth/me" -Headers $headers -TimeoutSec 10

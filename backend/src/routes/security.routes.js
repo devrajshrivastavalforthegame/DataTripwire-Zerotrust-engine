@@ -19,7 +19,8 @@ import {
 import { requirePermission } from "../middleware/authorization.middleware.js";
 import { requireProtectedAction } from "../middleware/policy.middleware.js";
 
-const router = Router();\nrouter.use(authenticate, requirePortal("admin"));
+const router = Router();
+router.use(authenticate, requirePortal("admin"));
 
 router.post(
     "/events",

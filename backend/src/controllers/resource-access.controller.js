@@ -55,15 +55,15 @@ export async function accessProtectedResource(req, res) {
   });
 
   // Add deterministic protected-resource risk after the baseline evaluation.
-  let protectedPoints = resource.sensitivity === "RESTRICTED" ? 25 : resource.sensitivity === "CONFIDENTIAL" ? 14 : 0;
-  if (isHighImpact) protectedPoints += 12;
+  let protectedPoints = resource.resource_type === "CREDENTIALS" ? 55 : resource.sensitivity === "RESTRICTED" ? 25 : resource.sensitivity === "CONFIDENTIAL" ? 14 : 0;
+  if (isHighImpact) protectedPoints += resource.resource_type === "CREDENTIALS" ? 25 : 12;
   if (protectedPoints) {
     const score = Math.min(100, risk.score + protectedPoints);
     risk.previousScore = risk.score;
     risk.score = score;
     risk.sts = Math.max(0,100-score);
     risk.ats = Math.min(100,risk.ats + protectedPoints);
-    risk.factors.push({type:"protected_resource",points:protectedPoints,detail:`${resource.sensitivity} resource accessed with ${String(action).toUpperCase()} action.`});
+    risk.factors.push({type:"protected_resource",points:protectedPoints,detail:`${resource.resource_type === "CREDENTIALS" ? "Credential" : resource.sensitivity} resource accessed with ${String(action).toUpperCase()} action.`});
     risk.decision = score >= 85 ? "QUARANTINE" : score >= 70 ? "RESTRICT" : score >= 50 ? "VERIFY" : score >= 30 ? "MONITOR" : "ALLOW";
     risk.explanation = risk.factors.map(f=>f.detail).join(" ");
     await query(

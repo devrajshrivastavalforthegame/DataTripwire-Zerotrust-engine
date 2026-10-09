@@ -36,6 +36,12 @@ export async function accessProtectedResource(req, res) {
   );
 
   const event = eventResult.rows[0];
+  event.metadata = {
+    ...(event.metadata || {}),
+    resource_type: resource.sensitivity === "RESTRICTED" ? "restricted" : resource.sensitivity === "CONFIDENTIAL" ? "confidential" : resource.resource_type,
+    high_impact_action: ["DOWNLOAD","COPY"].includes(String(action).toUpperCase())
+  };
+  await query(`UPDATE behavior_events SET metadata=$1 WHERE id=$2`, [JSON.stringify(event.metadata), event.id]);
   const isHighImpact = ["DOWNLOAD","COPY"].includes(String(action).toUpperCase());
   const previous = await query(
     `SELECT risk_score FROM risk_decisions WHERE session_id=$1 ORDER BY created_at DESC LIMIT 1`,
@@ -77,9 +83,37 @@ export async function accessProtectedResource(req, res) {
   let ai = null;
   try {
     ai = await analyzeWithAI({
-      user_id:req.auth.user.id, risk_score:risk.score, decision:risk.decision,
-      reasons:risk.factors.map(f=>f.type),
-      context:{resource:resource.name,sensitivity:resource.sensitivity,action,event_type:event.event_type,role:req.auth.user.role}
+      user_id: String(req.auth.user.id),
+      session_id: String(req.auth.session.id),
+      risk_score: risk.score,
+      decision: risk.decision,
+      reasons: risk.factors.map(f => f.type),
+      device: { is_new: false },
+      location: { is_new: false },
+      time_context: { is_unusual: false },
+      activity: {
+        requests_per_minute: Number(requestCount) || 1,
+        unique_resources: 1,
+        records_accessed: isHighImpact ? 1 : 0,
+        download_volume_mb: isHighImpact ? 1 : 0,
+        authorization_failures: 0,
+        cross_domain_access: 0
+      },
+      context: {
+        role: req.auth.user.role || "",
+        responsibility: req.auth.user.role || "",
+        task: event.task || "",
+        resource: resource.name,
+        action: String(action).toUpperCase(),
+        scope: event.scope || "assigned",
+        sts: risk.sts,
+        ats: risk.ats,
+        session_status: req.auth.session.status || "active",
+        task_match: true,
+        responsibility_match: true,
+        sensitive_resource: resource.sensitivity !== "PUBLIC",
+        deception_interaction: false
+      }
     });
   } catch {
     ai = {assessment:"unavailable",confidence:0,recommended_action:risk.decision,fallback:true};

@@ -187,7 +187,8 @@ export async function getDataExposureReport({ windowHours = 168, limit = 50 } = 
         const current = currentMetrics(row);
         const previous = previousMetrics(row);
         const currentRisk = calculateDataExposureRisk(current, previous.sensitive_access_count);
-        const previousRisk = calculateDataExposureRisk(previous, 0);
+        // Score the previous window as a baseline, not as a fresh first-window burst.
+        const previousRisk = calculateDataExposureRisk(previous, previous.sensitive_access_count);
 
         return {
             user_id: row.user_id,
@@ -220,7 +221,7 @@ export async function getDataExposureReport({ windowHours = 168, limit = 50 } = 
         count: users.length,
         classification_source: "resources.sensitivity",
         telemetry_note: "Only events matched to a resource in the trusted resources catalogue with CONFIDENTIAL or RESTRICTED sensitivity are included. Data-transfer byte volume is not captured by this report; recorded_bytes is null and must not be interpreted as zero.",
-        risk_note: "This is a report-only heuristic. It does not modify session risk decisions or enforce policy.",
+        risk_note: "This read-only report uses an explainable heuristic, not a trained ML probability. The separate behavior-event pipeline reuses the per-user exposure assessment during deterministic risk fusion; this endpoint itself does not enforce policy.",
         users
     };
 }

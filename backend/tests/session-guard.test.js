@@ -11,7 +11,7 @@ jest.unstable_mockModule("../src/services/auth/session.repository.js", () => ({
     updateSessionActivity: jest.fn()
 }));
 
-const { requireActiveSession } = await import("../src/middleware/auth.middleware.js");
+const { requireActiveSession, requirePortal } = await import("../src/middleware/auth.middleware.js");
 
 function responseMock() {
     return {
@@ -48,4 +48,38 @@ describe("requireActiveSession", () => {
             expect(res.payload.error).toBe("Active session required");
         }
     );
+});
+
+
+describe("requirePortal", () => {
+    test.each([
+        ["employee", "employee"],
+        ["admin", "admin"]
+    ])("allows a %s session in its matching portal", (portal, expectedPortal) => {
+        const req = { auth: { session: { portal } } };
+        const res = responseMock();
+        let nextCalled = false;
+
+        requirePortal(expectedPortal)(req, res, () => { nextCalled = true; });
+
+        expect(nextCalled).toBe(true);
+        expect(res.statusCode).toBe(200);
+    });
+
+    test.each([
+        ["employee", "admin"],
+        ["admin", "employee"],
+        [undefined, "admin"]
+    ])("rejects a %s session from the %s portal", (actualPortal, expectedPortal) => {
+        const req = { auth: { session: actualPortal ? { portal: actualPortal } : {} } };
+        const res = responseMock();
+        let nextCalled = false;
+
+        requirePortal(expectedPortal)(req, res, () => { nextCalled = true; });
+
+        expect(nextCalled).toBe(false);
+        expect(res.statusCode).toBe(403);
+        expect(res.payload.code).toBe("PORTAL_MISMATCH");
+        expect(res.payload.requiredPortal).toBe(expectedPortal);
+    });
 });

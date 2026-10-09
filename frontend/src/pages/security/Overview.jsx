@@ -25,7 +25,7 @@ export default function Overview(){
     <div className="sec-detail-block"><span>DATA BREACH RISK</span><strong>{exposure?.overall?.score ?? "—"}{exposure?.overall?.score != null ? "/100" : ""}</strong></div>
     <div className="sec-detail-block"><span>RISK LEVEL</span><strong>{exposure?.overall?.level ?? "Loading"}</strong></div>
     <div className="sec-detail-block"><span>30-DAY EVENTS</span><strong>{exposure?.windows?.days30?.eventCount ?? "—"}</strong></div>
-    <div className="sec-detail-block"><span>MEASURED TRANSFER</span><strong>{exposure?.windows?.days30?.totalBytes == null ? "Not measured" : exposure.windows.days30.totalBytes.toLocaleString()+" bytes"}</strong></div>
+    <div className="sec-detail-block"><span>MEASURED TRANSFER</span><strong>{exposure?.windows?.days30?.totalBytes == null ? "Not measured" : exposure.windows.days30.totalBytes.toLocaleString()+" bytes"+(exposure.windows.days30.unmeasuredByteEvents>0?" (partial)":"")}</strong></div>
    </div>}
    <p className="sec-muted-note">Exposure scores are deterministic prototype indicators. Transfer volume is shown only when measured by the application.</p>
   </section>

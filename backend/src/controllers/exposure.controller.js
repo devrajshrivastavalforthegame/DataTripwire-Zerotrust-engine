@@ -54,6 +54,9 @@ export function calculateExposureRisk(rows = []) {
   const sensitiveBytes = measuredSensitiveBytes.length ? sensitiveBytesValue : null;
 
   const departments = new Set(events.map((e) => e.department).filter(Boolean));
+  const criticalEvents = events.filter((e) => e.classification === "CRITICAL");
+  const measuredSensitiveEvents = measuredSensitiveBytes.length;
+  const unmeasuredSensitiveEvents = sensitive.length - measuredSensitiveEvents;
   const resources = new Set(events.map((e) => e.resource_id).filter(Boolean));
   const bulk = events.filter((e) => e.action === "BULK_DOWNLOAD").length;
   const exportCount = exports.length;
@@ -85,8 +88,13 @@ export function calculateExposureRisk(rows = []) {
 
   return {
     eventCount: events.length,
-    sensitiveFiles: sensitive.length,
-    criticalFiles: events.filter((e) => e.classification === "CRITICAL").length,
+    // These are event counts, not unique file counts: one resource can be accessed repeatedly.
+    sensitiveEvents: sensitive.length,
+    criticalEvents: criticalEvents.length,
+    measuredByteEvents: measuredBytes.length,
+    unmeasuredByteEvents: events.length - measuredBytes.length,
+    measuredSensitiveByteEvents: measuredSensitiveEvents,
+    unmeasuredSensitiveByteEvents: unmeasuredSensitiveEvents,
     downloads: events.filter((e) =>
       ["DOWNLOAD", "BULK_DOWNLOAD"].includes(e.action)
     ).length,

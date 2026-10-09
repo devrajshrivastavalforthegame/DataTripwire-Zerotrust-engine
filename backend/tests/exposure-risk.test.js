@@ -6,6 +6,8 @@ describe("calculateExposureRisk", () => {
       { action: "VIEW", classification: "CONFIDENTIAL", bytes_transferred: null, resource_id: "r1" },
     ]);
     expect(result.eventCount).toBe(1);
+    expect(result.unmeasuredByteEvents).toBe(1);
+    expect(result.measuredByteEvents).toBe(0);
     expect(result.totalBytes).toBeNull();
     expect(result.sensitiveBytes).toBeNull();
     expect(result.DBR).toBeGreaterThan(0);
@@ -19,6 +21,8 @@ describe("calculateExposureRisk", () => {
     expect(result.totalBytes).toBe(1024);
     expect(result.sensitiveBytes).toBe(1024);
     expect(result.downloads).toBe(1);
+    expect(result.measuredByteEvents).toBe(1);
+    expect(result.unmeasuredByteEvents).toBe(1);
   });
 
   test("ignores negative or non-numeric byte measurements", () => {
@@ -28,5 +32,6 @@ describe("calculateExposureRisk", () => {
     ]);
     expect(result.totalBytes).toBeNull();
     expect(result.sensitiveBytes).toBeNull();
+    expect(result.unmeasuredByteEvents).toBe(2);
   });
 });

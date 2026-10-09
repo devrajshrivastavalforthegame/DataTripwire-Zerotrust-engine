@@ -6,7 +6,8 @@ export async function getOverview(req, res) {
         activeSessions,
         highRiskUsers,
         restrictedSessions,
-        policyDecisions
+        policyDecisions,
+        openIncidents
     ] = await Promise.all([
         query(`
             SELECT COUNT(DISTINCT user_id)::int AS count
@@ -42,6 +43,14 @@ export async function getOverview(req, res) {
             SELECT COUNT(*)::int AS count
             FROM risk_decisions
             WHERE created_at >= NOW() - INTERVAL '24 hours'
+        `),
+
+        query(`
+            SELECT COUNT(*)::int AS count
+            FROM audit_logs
+            WHERE severity IN ('high','critical')
+               OR action IN ('RESTRICT','QUARANTINE','BLOCK')
+               OR event_type = 'deception'
         `)
     ]);
 
@@ -76,7 +85,7 @@ export async function getOverview(req, res) {
             activeUsers: activeUsers.rows[0].count,
             activeSessions: activeSessions.rows[0].count,
             highRiskUsers: highRiskUsers.rows[0].count,
-            openIncidents: 0,
+            openIncidents: openIncidents.rows[0].count,
             restrictedSessions: restrictedSessions.rows[0].count,
             policyDecisions: policyDecisions.rows[0].count
         },

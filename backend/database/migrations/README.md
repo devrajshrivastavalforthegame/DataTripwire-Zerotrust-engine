@@ -8,7 +8,8 @@ Before applying migration 008 to an existing database:
 
 1. Take a verified backup of the target database and confirm the restore procedure.
 2. Check that the target database is the intended environment; do not point this command at a production database during local testing.
-3. Apply only the new migration file, not the entire historical migration directory.
+3. Review existing `resources.sensitivity` values. Migration 008 intentionally aborts before changing the constraint if any rows contain NULL or a value outside `PUBLIC`, `INTERNAL`, `CONFIDENTIAL`, `RESTRICTED`, or `CRITICAL`. Remediate such rows explicitly and retry only after reviewing the data.
+4. Apply only the new migration file, not the entire historical migration directory.
 
 From PowerShell at the repository root, after loading the correct `.env` and confirming `DATABASE_URL`:
 

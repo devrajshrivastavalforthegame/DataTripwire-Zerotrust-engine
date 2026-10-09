@@ -1,5 +1,21 @@
 BEGIN;
 
+-- Fail before replacing the constraint if legacy rows contain values this
+-- migration cannot preserve. Transaction rollback leaves the old constraint intact.
+DO $migration_preflight$
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM resources
+        WHERE sensitivity IS NULL
+           OR sensitivity NOT IN ('PUBLIC','INTERNAL','CONFIDENTIAL','RESTRICTED','CRITICAL')
+    ) THEN
+        RAISE EXCEPTION
+            'Migration 008 stopped: resources.sensitivity contains NULL or unsupported values. Review and explicitly remediate those rows before retrying.';
+    END IF;
+END
+$migration_preflight$;
+
 ALTER TABLE resources DROP CONSTRAINT IF EXISTS chk_resource_sensitivity;
 ALTER TABLE resources ADD CONSTRAINT chk_resource_sensitivity
 CHECK (sensitivity IN ('PUBLIC','INTERNAL','CONFIDENTIAL','RESTRICTED','CRITICAL'));

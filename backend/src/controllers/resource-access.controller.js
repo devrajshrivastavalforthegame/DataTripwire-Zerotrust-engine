@@ -78,7 +78,10 @@ export async function accessProtectedResource(req, res) {
     );
   }
 
-  const policy = await applyPolicy({userId:req.auth.user.id,sessionId:req.auth.session.id,decision:risk.decision});
+  const stepUpVerifiedAt = req.auth.session.step_up_verified_at ? Date.parse(req.auth.session.step_up_verified_at) : NaN;
+  const stepUpAgeMs = Date.now() - stepUpVerifiedAt;
+  const stepUpVerified = Number.isFinite(stepUpAgeMs) && stepUpAgeMs >= 0 && stepUpAgeMs <= 5 * 60 * 1000;
+  const policy = await applyPolicy({userId:req.auth.user.id,sessionId:req.auth.session.id,decision:risk.decision,stepUpVerified});
 
   let ai = null;
   try {
@@ -119,7 +122,7 @@ export async function accessProtectedResource(req, res) {
     ai = {assessment:"unavailable",confidence:0,recommended_action:risk.decision,fallback:true};
   }
 
-  const blocked = ["RESTRICT","QUARANTINE"].includes(risk.decision);
+  const blocked = ["RESTRICT","QUARANTINE"].includes(risk.decision) || (risk.decision === "VERIFY" && !stepUpVerified);
   const severity = risk.score >= 85 ? "critical" : risk.score >= 70 ? "high" : risk.score >= 50 ? "medium" : "info";
 
   await query(
@@ -143,6 +146,9 @@ export async function accessProtectedResource(req, res) {
 
   return res.status(blocked ? 403 : 200).json({
     allowed:!blocked,
+    ...(blocked && risk.decision === "VERIFY" ? { code: "STEP_UP_REQUIRED" } : {}),
+    ...(blocked && risk.decision === "RESTRICT" ? { code: "SESSION_RESTRICTED" } : {}),
+    ...(blocked && risk.decision === "QUARANTINE" ? { code: "SESSION_QUARANTINED" } : {}),
     resource,
     action:String(action).toUpperCase(),
     risk:{score:risk.score,sts:risk.sts,ats:risk.ats,decision:risk.decision,factors:risk.factors,explanation:risk.explanation},

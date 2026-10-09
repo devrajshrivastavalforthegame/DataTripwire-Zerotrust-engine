@@ -1,0 +1,10 @@
+import {Router} from "express";
+import {authenticate} from "../middleware/auth.middleware.js";
+import {getState,updateState,workspaceAction,createTask,updateTask,createProject,updateProject,decideApproval,sendMessage,updateProfile,updateSettings,createCalendarEvent} from "../controllers/workspace.controller.js";
+const router=Router();router.use(authenticate);
+router.get("/state",getState);router.put("/state",updateState);router.post("/actions",workspaceAction);
+router.post("/tasks",createTask);router.patch("/tasks/:id",updateTask);
+router.post("/projects",createProject);router.patch("/projects/:id",updateProject);
+router.post("/approvals/:id/:decision",decideApproval);router.post("/messages",sendMessage);
+router.put("/profile",updateProfile);router.put("/settings",updateSettings);router.post("/calendar/events",createCalendarEvent);
+export default router;

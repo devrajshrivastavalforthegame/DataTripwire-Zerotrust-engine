@@ -78,7 +78,7 @@ export async function listIncidents(req, res) {
 
 export async function resolveIncident(req,res){
   const id=req.params.id;
-  const result=await query("UPDATE audit_logs SET details=jsonb_set(details,'{incidentStatus}','\\\"RESOLVED\\\"'::jsonb,true) WHERE id=$1 RETURNING id,details",[id]);
+  const result=await query("UPDATE audit_logs SET details=jsonb_set(details,'{incidentStatus}',to_jsonb('RESOLVED'::text),true) WHERE id=$1 RETURNING id,details",[id]);
   if(!result.rows[0])return res.status(404).json({error:"Incident not found"});
   await query("INSERT INTO audit_logs(user_id,event_type,action,severity,details) VALUES($1,'incident_resolution','RESOLVE','info',$2)",[req.auth.user.id,JSON.stringify({incidentId:id,resolvedBy:req.auth.user.id})]);
   res.json({resolved:true,incident:result.rows[0]});

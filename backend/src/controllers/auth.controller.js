@@ -10,10 +10,14 @@ export async function loginController(req, res) {
         if (typeof email !== "string" || typeof password !== "string") {
             return res.status(400).json({ error: "email and password are required" });
         }
+        if (!["employee", "admin"].includes(portal)) {
+            return res.status(400).json({ error: "portal must be employee or admin", code: "PORTAL_REQUIRED" });
+        }
 
         const result = await login({
             email: email.trim().toLowerCase(),
             password,
+            portal,
             ipAddress: req.ip,
             userAgent: req.get("user-agent"),
             deviceFingerprint,

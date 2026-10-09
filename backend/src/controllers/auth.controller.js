@@ -6,7 +6,7 @@ import { query } from "../config/database.js";
 
 export async function loginController(req, res) {
     try {
-        const { email, password, deviceFingerprint, location } = req.body || {};
+        const { email, password, portal, deviceFingerprint, location } = req.body || {};
         if (typeof email !== "string" || typeof password !== "string") {
             return res.status(400).json({ error: "email and password are required" });
         }
@@ -21,7 +21,7 @@ export async function loginController(req, res) {
         });
         res.json(result);
     } catch (error) {
-        res.status(error.message === "Invalid credentials" ? 401 : 403).json({ error: error.message });
+        const status = error.message === "Invalid credentials" ? 401 : error.code === "PORTAL_MISMATCH" || error.code === "PORTAL_NOT_ALLOWED" ? 403 : 500;\n        res.status(status).json({ error: error.message, ...(error.code ? { code: error.code } : {}) });
     }
 }
 

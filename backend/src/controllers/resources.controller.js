@@ -1,4 +1,4 @@
-import { query } from "../config/database.js";
+import pool, { query } from "../config/database.js";
 
 export async function listResources(req, res) {
     try {
@@ -53,5 +53,85 @@ export async function listResources(req, res) {
         return res.status(500).json({
             error: "Unable to load resources"
         });
+    }
+}
+
+
+export async function updateSecurityResource(req, res) {
+    const { id } = req.params;
+    const body = req.body ?? {};
+    const allowedFields = ["sensitivity", "active", "description"];
+    const suppliedFields = Object.keys(body);
+    const unsupported = suppliedFields.filter((field) => !allowedFields.includes(field));
+
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)) {
+        return res.status(400).json({ error: "Invalid resource ID" });
+    }
+    if (!suppliedFields.length || unsupported.length) {
+        return res.status(400).json({
+            error: "Provide one or more supported fields: sensitivity, active, description",
+            unsupportedFields: unsupported
+        });
+    }
+    if (body.sensitivity !== undefined &&
+        !["PUBLIC", "INTERNAL", "CONFIDENTIAL", "RESTRICTED"].includes(String(body.sensitivity).toUpperCase())) {
+        return res.status(400).json({ error: "sensitivity must be PUBLIC, INTERNAL, CONFIDENTIAL, or RESTRICTED" });
+    }
+    if (body.active !== undefined && typeof body.active !== "boolean") {
+        return res.status(400).json({ error: "active must be a boolean" });
+    }
+    if (body.description !== undefined &&
+        (typeof body.description !== "string" || body.description.length > 1000)) {
+        return res.status(400).json({ error: "description must be a string of at most 1000 characters" });
+    }
+
+    let client;
+    try {
+        client = await pool.connect();
+        await client.query("BEGIN");
+        const updated = await client.query(
+            `UPDATE resources
+             SET sensitivity = COALESCE($1, sensitivity),
+                 active = COALESCE($2, active),
+                 description = CASE WHEN $3::boolean THEN $4::text ELSE description END,
+                 updated_at = NOW()
+             WHERE id = $5
+             RETURNING id, name, resource_type, sensitivity, owner_user_id, description, active, created_at, updated_at`,
+            [
+                body.sensitivity === undefined ? null : String(body.sensitivity).toUpperCase(),
+                body.active === undefined ? null : body.active,
+                body.description !== undefined,
+                body.description ?? null,
+                id
+            ]
+        );
+
+        const resource = updated.rows[0];
+        if (!resource) {
+            await client.query("ROLLBACK");
+            return res.status(404).json({ error: "Resource not found" });
+        }
+
+        await client.query(
+            `INSERT INTO audit_logs
+             (user_id, session_id, event_type, action, severity, details, ip_address)
+             VALUES ($1, $2, 'resource_management', 'UPDATE', 'info', $3, $4)`,
+            [
+                req.auth.user.id,
+                req.auth.session.id,
+                JSON.stringify({ resourceId: id, resourceName: resource.name, changes: body }),
+                req.ip
+            ]
+        );
+        await client.query("COMMIT");
+        return res.json({ updated: true, resource });
+    } catch (error) {
+        if (client) {
+            try { await client.query("ROLLBACK"); } catch {}
+        }
+        console.error("Resource update error:", error);
+        return res.status(500).json({ error: "Unable to update resource" });
+    } finally {
+        client?.release();
     }
 }

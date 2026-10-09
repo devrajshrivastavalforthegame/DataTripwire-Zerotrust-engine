@@ -43,6 +43,18 @@ const demoData = {
   ]
 };
 
+
+const capabilityLabels = {
+  overview: "Overview",
+  users: "Users & Risk",
+  sessions: "Resources",
+  incidents: "Incidents",
+  policies: "Policy Engine",
+  rbac: "RBAC",
+  audit: "Audit Logs",
+  response: "Adaptive Response"
+};
+
 const friendlyError = (e) =>
   /401|403|token|expired|unauthorized|invalid/i.test(String(e?.message || ""))
     ? "Session authorization needs attention. Showing the protected demo state."
@@ -94,7 +106,9 @@ export default function RBAC() {
   ) || [];
 
   const resources = useMemo(() => {
+    const preferred = ["overview","users","sessions","incidents","policies","rbac","audit","response"];
     const all = [...new Set((data?.permissions || []).map(p => p.resource))];
+    preferred.forEach(x => { if (!all.includes(x)) all.push(x); });
     return all.sort((a, b) => {
       const ai = order.indexOf(a), bi = order.indexOf(b);
       return (ai < 0 ? 99 : ai) - (bi < 0 ? 99 : bi);
@@ -142,7 +156,7 @@ export default function RBAC() {
   };
 
   return (
-    <div className="security-page">
+    <div className="security-page dt-access-governance">
       <header className="dt-product-head">
         <div>
           <span>IDENTITY & ACCESS GOVERNANCE</span>
@@ -247,8 +261,8 @@ export default function RBAC() {
                     <section className="dt-permission-group" key={resource}>
                       <header>
                         <div>
-                          <span>{resource}</span>
-                          <strong>{granted}/{ps.length} granted</strong>
+                          <span>{capabilityLabels[resource] || resource}</span>
+                          <strong>{granted}/{Math.max(ps.length, 1)} granted</strong>
                         </div>
                         <span className={granted === ps.length ? "all" : granted ? "partial" : "denied"}>
                           {granted === ps.length ? "FULL ACCESS" : granted ? "PARTIAL" : "DENIED"}

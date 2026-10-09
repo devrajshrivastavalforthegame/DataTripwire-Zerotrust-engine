@@ -108,7 +108,7 @@ describe("getDataExposureReport", () => {
                 current_sensitive_export_count: 0,
                 current_sensitive_bulk_download_count: 0,
                 current_unique_sensitive_resources: 2,
-                previous_sensitive_access_count: 2,
+                previous_sensitive_access_count: 5,
                 previous_sensitive_download_count: 0,
                 previous_sensitive_copy_count: 0,
                 previous_sensitive_export_count: 0,
@@ -126,6 +126,8 @@ describe("getDataExposureReport", () => {
         expect(report.count).toBe(1);
         expect(report.users[0].current.metrics.recorded_bytes).toBeNull();
         expect(report.users[0].current.metrics.byte_volume_status).toBe("NOT_CAPTURED");
+        expect(report.users[0].previous.data_exposure_risk).toBe(10);
+        expect(report.users[0].previous.factors.map(item => item.code)).not.toContain("EXPOSURE_INCREASE");
         expect(report.users[0].trend.direction).toBe("RISING");
     });
 });

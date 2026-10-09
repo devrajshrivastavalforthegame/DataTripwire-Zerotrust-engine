@@ -7,7 +7,7 @@ import { listSessions, sessionTimeline, listAudit } from "../controllers/securit
 import { getOverview } from "../controllers/overview.controller.js";
 import { listActivity } from "../controllers/activity.controller.js";
 import { listUsersRisk } from "../controllers/users-risk.controller.js";
-import { listResources } from "../controllers/resources.controller.js";
+import { listResources, updateSecurityResource } from "../controllers/resources.controller.js";
 import { listIncidents, resolveIncident } from "../controllers/incidents.controller.js";
 import {
     getPolicies,
@@ -41,13 +41,22 @@ router.get(
     requirePermission("incidents", "read"),
     listIncidents
 );
-router.post("/incidents/:id/resolve", authenticate, requirePermission("incidents", "resolve"), resolveIncident);
+router.post("/incidents/:id/resolve", authenticate, requireActiveSession, requirePermission("incidents", "resolve"), requireProtectedAction, resolveIncident);
 
 router.get(
     "/resources",
     authenticate,
     requirePermission("resources", "read"),
     listResources
+);
+
+router.patch(
+    "/resources/:id",
+    authenticate,
+    requireActiveSession,
+    requirePermission("resources", "manage"),
+    requireProtectedAction,
+    updateSecurityResource
 );
 router.get(
     "/users-risk",
@@ -125,21 +134,27 @@ router.get(
 router.post(
     "/sessions/:sessionId/restrict",
     authenticate,
+    requireActiveSession,
     requirePermission("sessions", "restrict"),
+    requireProtectedAction,
     restrictSession
 );
 
 router.post(
     "/sessions/:sessionId/quarantine",
     authenticate,
+    requireActiveSession,
     requirePermission("sessions", "quarantine"),
+    requireProtectedAction,
     quarantineSession
 );
 
 router.post(
     "/sessions/:sessionId/release",
     authenticate,
+    requireActiveSession,
     requirePermission("sessions", "release"),
+    requireProtectedAction,
     releaseSession
 );
 

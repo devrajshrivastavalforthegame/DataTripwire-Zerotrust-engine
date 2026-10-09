@@ -24,7 +24,7 @@ export default function RBAC(){
 
   const permissionGroups=useMemo(()=>keys.map(([resource,label])=>{
     const items=(data?.permissions||[]).filter(p=>p.resource===resource);
-    return {resource,label,items,granted:items.length>0&&items.every(p=>rolePermissions.has(p.id))};
+    return {resource,label,items,granted:items.some(p=>rolePermissions.has(p.id))};
   }),[data,rolePermissions]);
 
   const toggle=async(group)=>{

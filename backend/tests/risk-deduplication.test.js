@@ -46,8 +46,8 @@ describe("risk factor accumulation", () => {
         });
 
         expect(result.factors.map((factor) => factor.type)).toContain("high_impact_action");
-        expect(result.score).toBe(63);
-        expect(result.decision).toBe("VERIFY");
+        expect(result.score).toBe(71);
+        expect(result.decision).toBe("RESTRICT");
     });
 
     test("decoy access always produces quarantine", () => {

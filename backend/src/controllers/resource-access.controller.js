@@ -3,6 +3,7 @@ import { evaluateAndSave } from "../services/risk/risk.service.js";
 import { applyPolicy } from "../services/policy/policy.service.js";
 import { analyzeWithAI } from "../services/ai/ai.service.js";
 import { sendSecurityIncidentAlert } from "../services/alert.service.js";
+import { calculateExposureRisk } from "./exposure.controller.js";
 
 const ACTIONS = new Set(["OPEN", "DOWNLOAD", "COPY"]);
 
@@ -149,6 +150,50 @@ export async function accessProtectedResource(req, res) {
 
         const blocked = ["RESTRICT", "QUARANTINE"].includes(risk.decision) ||
             (risk.decision === "VERIFY" && !stepUpVerified);
+
+        // Only successful access is recorded as exposure telemetry. Denied attempts remain
+        // in behavior_events/audit_logs and must not be represented as data disclosed.
+        if (!blocked) {
+            const telemetryAction = ({ OPEN: "VIEW", DOWNLOAD: "DOWNLOAD", COPY: "COPY" })[action];
+            await query(
+                `INSERT INTO data_access_events
+                    (user_id, session_id, resource_id, action, classification, department, source_ip, metadata)
+                 VALUES ($1,$2,$3,$4,$5,$6,$7,$8::jsonb)`,
+                [
+                    req.auth.user.id,
+                    req.auth.session.id,
+                    resource.id,
+                    telemetryAction,
+                    String(resource.sensitivity || "INTERNAL").toUpperCase(),
+                    req.auth.user.department || null,
+                    req.ip || null,
+                    JSON.stringify({
+                        resource_name: resource.name,
+                        resource_type: resource.resource_type,
+                        request_count: requestCount,
+                        outcome: "allowed",
+                        measured_bytes: false
+                    })
+                ]
+            );
+        }
+
+        const exposureEvents = await query(
+            `SELECT dae.action,
+                    COALESCE(r.sensitivity, dae.classification) AS classification,
+                    dae.bytes_transferred,
+                    COALESCE(dae.department, u.department) AS department,
+                    dae.resource_id
+               FROM data_access_events dae
+               LEFT JOIN resources r ON r.id = dae.resource_id
+               LEFT JOIN users u ON u.id = dae.user_id
+              WHERE dae.user_id = $1
+                AND dae.created_at >= NOW() - INTERVAL '30 days'
+              ORDER BY dae.created_at DESC
+              LIMIT 5000`,
+            [req.auth.user.id]
+        );
+        const exposure = calculateExposureRisk(exposureEvents.rows);
         const severity = risk.score >= 85 ? "critical" : risk.score >= 70 ? "high" : risk.score >= 50 ? "medium" : "info";
 
         await query(
@@ -195,6 +240,16 @@ export async function accessProtectedResource(req, res) {
                 decision: risk.decision,
                 factors: risk.factors,
                 explanation: risk.explanation
+            },
+            exposure: {
+                DER: exposure.DER,
+                ER: exposure.ER,
+                DBR: exposure.DBR,
+                level: exposure.level,
+                eventCount: exposure.eventCount,
+                totalBytes: exposure.totalBytes,
+                bytesVolumeStatus: exposure.bytesVolumeStatus,
+                window: "30 days"
             },
             policy,
             ai,

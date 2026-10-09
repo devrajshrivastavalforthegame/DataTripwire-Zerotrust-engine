@@ -24,13 +24,15 @@ function getJwtSecret() {
 export function generateAccessToken({
     userId,
     role,
-    sessionId
+    sessionId,
+    portal
 }) {
     return jwt.sign(
         {
             sub: userId,
             role,
-            sessionId
+            sessionId,
+            portal
         },
         getJwtSecret(),
         {

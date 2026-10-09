@@ -9977,3 +9977,150 @@ input:focus-visible {
 .dt-rbac-filter{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:14px 0 9px}.dt-rbac-filter select{border:1px solid rgba(148,163,184,.12);border-radius:7px;background:#10171f;color:#aebdcd;padding:7px 10px;font-size:9px;outline:none}.dt-permission-matrix{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.dt-permission-group{border:1px solid rgba(148,163,184,.1);border-radius:10px;background:#141b24;overflow:hidden}.dt-permission-group>header{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid rgba(148,163,184,.07)}.dt-permission-group>header div span,.dt-permission-group>header div strong{display:block}.dt-permission-group>header div span{font:700 9px "IBM Plex Mono";text-transform:uppercase;letter-spacing:.08em;color:#d6e0ea}.dt-permission-group>header div strong{margin-top:3px;font-size:8px;color:#64778d}.dt-permission-group>header>span{font:700 7px "IBM Plex Mono";padding:4px 6px;border-radius:5px;background:#18242f;color:#74889e}.dt-permission-group>header>span.all{color:#66c39d;background:#152820}.dt-permission-group>header>span.partial{color:#d8b477;background:#28241a}.dt-permission-row{display:grid;grid-template-columns:24px 1fr auto 14px;align-items:center;gap:8px;width:100%;padding:9px 11px;border:0;border-bottom:1px solid rgba(148,163,184,.05);background:transparent;text-align:left;color:#9eacbc;cursor:pointer}.dt-permission-row:hover{background:#18222d}.dt-permission-row.granted .dt-permission-state{background:#17362d;color:#66c39d}.dt-permission-row.denied .dt-permission-state{background:#211c22;color:#cf7d8c}.dt-permission-state{width:22px;height:22px;display:grid;place-items:center;border-radius:6px}.dt-permission-row strong,.dt-permission-row small{display:block}.dt-permission-row strong{font-size:9px;color:#d5dfe8}.dt-permission-row small{margin-top:2px;color:#607389;font-size:7px}.dt-permission-row>b{font:700 7px "IBM Plex Mono";color:#66c39d}.dt-permission-row.denied>b{color:#b56f7d}.dt-permission-row>svg{color:#63758a}.dt-members{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:10px 0}.dt-member-title{display:flex;align-items:center;gap:5px;width:100%;margin-bottom:1px;font:700 8px "IBM Plex Mono";color:#708297}.dt-members>div:not(.dt-member-title){display:flex;align-items:center;gap:5px;padding:5px 7px;border:1px solid rgba(148,163,184,.08);border-radius:6px;background:#10171f}.dt-members>div>span{width:20px;height:20px;display:grid;place-items:center;border-radius:5px;background:#203044;color:#9db8d2;font-size:7px;font-weight:800}.dt-members>div>strong{font-size:8px;color:#9cabbc}.dt-members>small{color:#66798e;font-size:8px}
 .dt-copilot-layout{display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:10px}.dt-copilot-shell,.dt-copilot-side{border:1px solid rgba(148,163,184,.1);border-radius:12px;background:#141b24;overflow:hidden}.dt-copilot-top{display:flex;align-items:center;gap:9px;padding:13px 15px;border-bottom:1px solid rgba(148,163,184,.08)}.dt-copilot-avatar{width:32px;height:32px;display:grid;place-items:center;border-radius:8px;background:#1c2b3a;color:#86aed3}.dt-copilot-top strong,.dt-copilot-top span{display:block}.dt-copilot-top strong{font-size:10px;color:#e0e8f0}.dt-copilot-top span{margin-top:2px;color:#65788e;font-size:8px}.dt-copilot-top button{margin-left:auto;display:flex;align-items:center;gap:5px;padding:6px 8px;border:1px solid rgba(148,163,184,.1);border-radius:6px;background:#10171f;color:#8497ab;font-size:8px;cursor:pointer}.dt-copilot-feed{min-height:430px;max-height:58vh;overflow:auto;padding:15px}.dt-copilot-message{display:flex;gap:8px;margin-bottom:12px}.dt-copilot-message.user{justify-content:flex-end}.dt-copilot-message.user>div{max-width:78%;padding:9px 11px;border-radius:9px 9px 2px 9px;background:#203247;color:#c9d8e7}.dt-copilot-message.ai>div:not(.dt-copilot-mini){max-width:82%;padding:9px 11px;border:1px solid rgba(148,163,184,.08);border-radius:2px 9px 9px 9px;background:#10171f}.dt-copilot-mini{width:25px;height:25px;display:grid;place-items:center;border-radius:6px;background:#1d2b39;color:#7fa8cf}.dt-copilot-message p{margin:0;font-size:9px;line-height:1.55;color:#c5d1dd}.dt-copilot-message small{display:block;margin-top:6px;font:7px "IBM Plex Mono";color:#6e849a}.dt-copilot-signals{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}.dt-copilot-signals span{display:flex;align-items:center;gap:3px;padding:3px 5px;border-radius:4px;background:#241d22;color:#c68791;font:7px "IBM Plex Mono"}.dt-copilot-thinking{display:flex;align-items:center;gap:6px;color:#6e849a;font-size:8px;padding:8px}.dt-copilot-input{padding:10px;border-top:1px solid rgba(148,163,184,.08);background:#111820}.dt-copilot-starters{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px}.dt-copilot-starters button{padding:5px 7px;border:1px solid rgba(148,163,184,.09);border-radius:6px;background:#17212b;color:#8295a9;font-size:7px;cursor:pointer}.dt-copilot-input form{display:flex;gap:6px}.dt-copilot-input input{flex:1;border:1px solid rgba(148,163,184,.11);border-radius:7px;background:#0c131a;color:#d1dbe5;padding:10px;font-size:9px;outline:none}.dt-copilot-input form>button{width:36px;border:0;border-radius:7px;background:#315779;color:#e3edf5;cursor:pointer}.dt-copilot-input button:disabled{opacity:.45;cursor:not-allowed}.dt-copilot-side{padding:12px;background:#111820}.dt-copilot-side>div{padding:12px;border:1px solid rgba(148,163,184,.08);border-radius:8px;background:#141d26;margin-bottom:8px}.dt-copilot-side svg{width:17px;color:#78a5cc;margin-bottom:8px}.dt-copilot-side strong{display:block;font-size:9px;color:#d5e0ea}.dt-copilot-side p{margin:6px 0 0;color:#687b90;font-size:8px;line-height:1.55}
 @media(max-width:1000px){.dt-permission-matrix,.dt-copilot-layout{grid-template-columns:1fr}}@media(max-width:650px){.dt-rbac-filter{align-items:flex-start;flex-direction:column}.dt-permission-matrix{grid-template-columns:1fr}.dt-copilot-feed{min-height:360px}}
+
+
+/* Access Governance — compact security-role matrix */
+.dt-access-governance {
+  --ag-bg: #171229;
+  --ag-card: rgba(37, 28, 61, .78);
+  --ag-card-2: rgba(45, 35, 72, .62);
+  --ag-border: rgba(145, 116, 198, .22);
+  --ag-text: #f5f1ff;
+  --ag-muted: #a9a0bd;
+  --ag-green: #62d6a7;
+  --ag-red: #b9a6cc;
+}
+.dt-access-governance .dt-product-head { margin-bottom: 14px; }
+.dt-access-governance .dt-product-head p { max-width: 720px; }
+.dt-access-governance .dt-stat-strip,
+.dt-access-governance > .dt-alert { display: none !important; }
+.dt-access-governance .dt-rbac-workspace {
+  display: grid;
+  grid-template-columns: 205px minmax(0, 1fr);
+  gap: 12px;
+  background: linear-gradient(135deg, rgba(31,23,51,.94), rgba(22,17,38,.96));
+  border: 1px solid var(--ag-border);
+  border-radius: 14px;
+  padding: 12px;
+  box-shadow: 0 18px 55px rgba(5,3,15,.28);
+}
+.dt-access-governance .dt-role-rail {
+  background: rgba(41,31,65,.72);
+  border: 1px solid var(--ag-border);
+  border-radius: 12px;
+  padding: 12px 9px;
+  min-height: 430px;
+}
+.dt-access-governance .dt-section-title {
+  color: var(--ag-muted);
+  font-size: 9px;
+  letter-spacing: .16em;
+  font-weight: 800;
+}
+.dt-access-governance .dt-role-rail > button {
+  width: 100%;
+  min-height: 54px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--ag-muted);
+  border-radius: 9px;
+  display: grid;
+  grid-template-columns: 24px 1fr 14px;
+  gap: 8px;
+  align-items: center;
+  text-align: left;
+  padding: 8px;
+  margin-top: 5px;
+  cursor: pointer;
+}
+.dt-access-governance .dt-role-rail > button.active {
+  background: linear-gradient(90deg, rgba(101,72,141,.52), rgba(79,57,111,.28));
+  border-color: rgba(158,126,207,.2);
+  color: var(--ag-text);
+}
+.dt-access-governance .dt-role-rail > button strong { display:block; font-size:10px; }
+.dt-access-governance .dt-role-rail > button small { display:block; margin-top:3px; font-size:8px; color:#8f86a5; }
+.dt-access-governance .dt-role-icon {
+  width: 22px; height: 22px; border-radius: 50%; display:grid; place-items:center;
+  border: 1px solid rgba(180,155,220,.22);
+}
+.dt-access-governance .dt-role-foot { margin: 18px 4px 0; color:#746b89; font-size:8px; line-height:1.5; }
+.dt-access-governance .dt-rbac-main { min-width: 0; }
+.dt-access-governance .dt-role-banner {
+  background: rgba(48,37,75,.5);
+  border: 1px solid var(--ag-border);
+  border-radius: 11px;
+  padding: 14px 16px;
+  min-height: 84px;
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+}
+.dt-access-governance .dt-role-banner > div:first-child > span { font-size:8px; letter-spacing:.15em; color:#8f85a8; font-weight:800; }
+.dt-access-governance .dt-role-banner h2 { margin:4px 0 3px; font-size:17px; color:var(--ag-text); }
+.dt-access-governance .dt-role-banner p { margin:0; font-size:9px; color:var(--ag-muted); }
+.dt-access-governance .dt-role-count { text-align:right; }
+.dt-access-governance .dt-role-count strong { display:block; font-size:18px; color:var(--ag-text); }
+.dt-access-governance .dt-role-count span { font-size:8px; color:#8e85a4; }
+.dt-access-governance .dt-members {
+  display:flex; align-items:center; gap:7px; flex-wrap:wrap;
+  margin:9px 0;
+}
+.dt-access-governance .dt-member-title { font-size:8px; color:#8f86a5; display:flex; align-items:center; gap:5px; margin-right:3px; }
+.dt-access-governance .dt-members > div:not(.dt-member-title) {
+  display:flex; align-items:center; gap:5px; padding:5px 7px;
+  border:1px solid var(--ag-border); border-radius:7px; background:rgba(42,32,66,.45);
+}
+.dt-access-governance .dt-members > div > span { width:16px;height:16px;border-radius:50%;display:grid;place-items:center;background:#584575;color:#e9ddff;font-size:6px;font-weight:800; }
+.dt-access-governance .dt-members > div > strong { font-size:8px; color:#bdb3d0; }
+.dt-access-governance .dt-rbac-filter {
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  padding: 8px 2px;
+}
+.dt-access-governance .dt-rbac-filter .dt-section-title { display:flex; gap:7px; align-items:center; }
+.dt-access-governance .dt-rbac-filter input,
+.dt-access-governance .dt-rbac-filter select {
+  height:27px; background:rgba(34,26,55,.8); border:1px solid var(--ag-border);
+  border-radius:7px; color:#bfb5ce; font-size:8px; padding:0 8px; outline:none;
+}
+.dt-access-governance .dt-permission-matrix {
+  display:grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap:8px;
+}
+.dt-access-governance .dt-permission-group {
+  border:1px solid var(--ag-border);
+  background:linear-gradient(145deg, rgba(45,35,70,.78), rgba(32,25,51,.7));
+  border-radius:9px;
+  overflow:hidden;
+}
+.dt-access-governance .dt-permission-group > header {
+  min-height:38px; padding:7px 10px; display:flex; align-items:center; justify-content:space-between;
+  border-bottom:1px solid rgba(145,116,198,.13);
+}
+.dt-access-governance .dt-permission-group > header > div { display:flex; align-items:center; gap:8px; }
+.dt-access-governance .dt-permission-group > header span:first-child { font-size:9px; color:#ddd5e9; font-weight:750; }
+.dt-access-governance .dt-permission-group > header strong { font-size:7px; color:#77708a; font-weight:600; }
+.dt-access-governance .dt-permission-group > header > span:last-child {
+  font-size:6px; font-weight:800; letter-spacing:.08em; color:#82788f;
+}
+.dt-access-governance .dt-permission-group > header > span.all { color:var(--ag-green); }
+.dt-access-governance .dt-permission-group > header > span.partial { color:#d5bd72; }
+.dt-access-governance .dt-permission-row {
+  width:100%; border:0; border-top:1px solid rgba(145,116,198,.09);
+  background:transparent; color:#9e96ad; min-height:39px; padding:7px 10px;
+  display:grid; grid-template-columns:20px 1fr auto 14px; gap:7px; align-items:center; text-align:left; cursor:pointer;
+}
+.dt-access-governance .dt-permission-row:hover { background:rgba(119,91,155,.11); }
+.dt-access-governance .dt-permission-state {
+  width:17px; height:17px; border-radius:50%; display:grid; place-items:center;
+  background:rgba(102,83,127,.22); color:#81778d;
+}
+.dt-access-governance .dt-permission-row.granted .dt-permission-state { background:rgba(77,188,143,.18); color:var(--ag-green); }
+.dt-access-governance .dt-permission-row strong { display:block; font-size:8px; color:#bdb4c9; }
+.dt-access-governance .dt-permission-row small { display:block; margin-top:2px; font-size:6.5px; color:#716a7e; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.dt-access-governance .dt-permission-row > b { font-size:6px; letter-spacing:.07em; color:#777080; }
+.dt-access-governance .dt-permission-row.granted > b { color:var(--ag-green); }
+@media (max-width: 850px) {
+  .dt-access-governance .dt-rbac-workspace { grid-template-columns:1fr; }
+  .dt-access-governance .dt-role-rail { min-height:auto; }
+  .dt-access-governance .dt-permission-matrix { grid-template-columns:1fr; }
+}

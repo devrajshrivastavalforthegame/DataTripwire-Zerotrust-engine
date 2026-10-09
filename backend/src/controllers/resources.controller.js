@@ -74,8 +74,8 @@ export async function updateSecurityResource(req, res) {
         });
     }
     if (body.sensitivity !== undefined &&
-        !["PUBLIC", "INTERNAL", "CONFIDENTIAL", "RESTRICTED"].includes(String(body.sensitivity).toUpperCase())) {
-        return res.status(400).json({ error: "sensitivity must be PUBLIC, INTERNAL, CONFIDENTIAL, or RESTRICTED" });
+        !["PUBLIC", "INTERNAL", "CONFIDENTIAL", "RESTRICTED", "CRITICAL"].includes(String(body.sensitivity).toUpperCase())) {
+        return res.status(400).json({ error: "sensitivity must be PUBLIC, INTERNAL, CONFIDENTIAL, RESTRICTED, or CRITICAL" });
     }
     if (body.active !== undefined && typeof body.active !== "boolean") {
         return res.status(400).json({ error: "active must be a boolean" });

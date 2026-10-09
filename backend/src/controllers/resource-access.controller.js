@@ -1,5 +1,6 @@
 import { query } from "../config/database.js";
-import { evaluateAndSave } from "../services/risk/risk.service.js";
+import { evaluateAndSave, decisionForScore } from "../services/risk/risk.service.js";
+import { calculateExposureRisk } from "./exposure.controller.js";
 import { applyPolicy } from "../services/policy/policy.service.js";
 import { analyzeWithAI } from "../services/ai/ai.service.js";
 import { sendSecurityIncidentAlert } from "../services/alert.service.js";
@@ -36,6 +37,13 @@ export async function accessProtectedResource(req, res) {
   );
 
   const event = eventResult.rows[0];
+
+const telemetryAction = ({
+  OPEN: "VIEW",
+  DOWNLOAD: "DOWNLOAD",
+  COPY: "COPY",
+})[String(action).toUpperCase()] || "VIEW";
+
   event.metadata = {
     ...(event.metadata || {}),
     resource_type: resource.sensitivity === "RESTRICTED" ? "restricted" : resource.sensitivity === "CONFIDENTIAL" ? "confidential" : resource.resource_type,
@@ -43,39 +51,91 @@ export async function accessProtectedResource(req, res) {
   };
   await query(`UPDATE behavior_events SET metadata=$1 WHERE id=$2`, [JSON.stringify(event.metadata), event.id]);
   const isHighImpact = ["DOWNLOAD","COPY"].includes(String(action).toUpperCase());
-  const previous = await query(
-    `SELECT risk_score FROM risk_decisions WHERE session_id=$1 ORDER BY created_at DESC LIMIT 1`,
-    [req.auth.session.id]
-  );
+
 
   // Protected-resource sensitivity and high-impact actions are explicit risk signals.
   if (resource.sensitivity === "RESTRICTED") event.metadata.resource_type = "restricted";
   else if (resource.sensitivity === "CONFIDENTIAL") event.metadata.resource_type = "confidential";
   if (isHighImpact) event.metadata.high_impact_action = true;
 
+  const protectedPoints =
+    resource.resource_type === "CREDENTIALS"
+        ? 55
+        : resource.sensitivity === "RESTRICTED"
+            ? 25
+            : resource.sensitivity === "CONFIDENTIAL"
+                ? 14
+                : 0;
+
+const actionPoints = isHighImpact
+    ? resource.resource_type === "CREDENTIALS"
+        ? 25
+        : 12
+    : 0;
+
+
+const additionalFactors = [];
+
+if (String(resource.sensitivity).toUpperCase() === "CRITICAL") {
+  additionalFactors.push({
+    type: "data_classification",
+    points: 40,
+    detail: "Access to CRITICAL-classified data",
+  });
+} else if (String(resource.sensitivity).toUpperCase() === "INTERNAL") {
+  additionalFactors.push({
+    type: "data_classification",
+    points: 5,
+    detail: "Access to INTERNAL-classified data",
+  });
+}
+if (protectedPoints > 0) {
+  additionalFactors.push({
+    type: "protected_resource",
+    points: protectedPoints,
+    detail: `${
+      resource.resource_type === "CREDENTIALS"
+        ? "Credential"
+        : resource.sensitivity
+    } resource accessed.`
+  });
+}
+
+if (actionPoints > 0) {
+  additionalFactors.push({
+    type: "high_impact_action",
+    points: actionPoints,
+    detail: `High-impact ${String(action).toUpperCase()} action on a protected resource.`
+  });
+}
+
   const risk = await evaluateAndSave({
-    userId:req.auth.user.id,
-    sessionId:req.auth.session.id,
+    userId: req.auth.user.id,
+    sessionId: req.auth.session.id,
     event,
-    isDecoy:false
+    isDecoy: false,
+    additionalFactors
   });
 
-  // Add deterministic protected-resource risk after the baseline evaluation.
-  let protectedPoints = resource.resource_type === "CREDENTIALS" ? 55 : resource.sensitivity === "RESTRICTED" ? 25 : resource.sensitivity === "CONFIDENTIAL" ? 14 : 0;
-  if (isHighImpact) protectedPoints += resource.resource_type === "CREDENTIALS" ? 25 : 12;
-  if (protectedPoints) {
-    const score = Math.min(100, risk.score + protectedPoints);
-    risk.previousScore = risk.score;
-    risk.score = score;
-    risk.sts = Math.max(0,100-score);
-    risk.ats = Math.min(100,risk.ats + protectedPoints);
-    risk.factors.push({type:"protected_resource",points:protectedPoints,detail:`${resource.resource_type === "CREDENTIALS" ? "Credential" : resource.sensitivity} resource accessed with ${String(action).toUpperCase()} action.`});
-    risk.decision = score >= 85 ? "QUARANTINE" : score >= 70 ? "RESTRICT" : score >= 50 ? "VERIFY" : score >= 30 ? "MONITOR" : "ALLOW";
-    risk.explanation = risk.factors.map(f=>f.detail).join(" ");
-    await query(
-      `UPDATE risk_decisions SET risk_score=$1,decision=$2,previous_score=$3,sts_score=$4,ats_score=$5,explanation=$6,risk_factors=$7,reasons=$8 WHERE id=$9`,
-      [risk.score,risk.decision,risk.previousScore,risk.sts,risk.ats,risk.explanation,JSON.stringify(risk.factors),JSON.stringify(risk.factors.map(f=>f.type)),risk.decisionId]
-    );
+  // Fuse behavior/access risk with cumulative data-exposure risk. This is deterministic
+  // backend policy input; AI remains advisory. Keep the rolling window bounded.
+  const exposureEvents = await query(
+    `SELECT action, classification, bytes_transferred, department, resource_id
+       FROM data_access_events WHERE user_id=$1 AND created_at >= NOW() - INTERVAL '30 days'
+       ORDER BY created_at DESC LIMIT 5000`,
+    [req.auth.user.id]
+  );
+  const exposure = calculateExposureRisk(exposureEvents.rows);
+  const fusedScore = Math.max(Number(risk.score) || 0, exposure.DBR);
+  if (fusedScore !== risk.score) {
+    risk.score = fusedScore;
+    risk.decision = decisionForScore(fusedScore);
+    risk.sts = Math.max(0, 100 - fusedScore);
+    risk.explanation = `${risk.explanation} Cumulative data exposure fusion: DER ${exposure.DER}, ER ${exposure.ER}, DBR ${exposure.DBR}.`;
+    await query(`UPDATE risk_decisions SET risk_score=$1, decision=$2, sts_score=$3, explanation=$4,
+      risk_factors = risk_factors || $5::jsonb WHERE id=$6`,
+      [risk.score, risk.decision, risk.sts, risk.explanation,
+       JSON.stringify([{ type: "data_risk_fusion", points: exposure.DBR, detail: `DER ${exposure.DER}; ER ${exposure.ER}; DBR ${exposure.DBR}` }]), risk.decisionId]);
   }
 
   const stepUpVerifiedAt = req.auth.session.step_up_verified_at ? Date.parse(req.auth.session.step_up_verified_at) : NaN;
@@ -123,6 +183,35 @@ export async function accessProtectedResource(req, res) {
   }
 
   const blocked = ["RESTRICT","QUARANTINE"].includes(risk.decision) || (risk.decision === "VERIFY" && !stepUpVerified);
+
+  // Exposure telemetry represents data that the user was actually allowed to access.
+  // Attempted/blocked requests remain in behavior_events and audit_logs, but must not
+  // inflate data exfiltration metrics as though bytes or records were disclosed.
+  if (!blocked) {
+    await query(
+      `INSERT INTO data_access_events
+         (user_id, session_id, resource_id, action, classification,
+          department, source_ip, metadata)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb)`,
+      [
+        req.auth.user.id,
+        req.auth.session.id,
+        resource.id,
+        telemetryAction,
+        String(resource.sensitivity || "INTERNAL").toUpperCase(),
+        req.auth.user.department || null,
+        req.ip || null,
+        JSON.stringify({
+          resource_name: resource.name,
+          resource_type: resource.resource_type,
+          request_count: Number(req.body?.request_count) || 1,
+          outcome: "allowed",
+          measured_bytes: false,
+        }),
+      ]
+    );
+  }
+
   const severity = risk.score >= 85 ? "critical" : risk.score >= 70 ? "high" : risk.score >= 50 ? "medium" : "info";
 
   await query(
@@ -152,6 +241,7 @@ export async function accessProtectedResource(req, res) {
     resource,
     action:String(action).toUpperCase(),
     risk:{score:risk.score,sts:risk.sts,ats:risk.ats,decision:risk.decision,factors:risk.factors,explanation:risk.explanation},
+    exposure:{DER:exposure.DER,ER:exposure.ER,DBR:exposure.DBR,level:exposure.level,window:"30 days"},
     policy,
     ai,
     alert

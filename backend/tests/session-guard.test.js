@@ -1,3 +1,4 @@
+import { jest } from "@jest/globals";
 import { requireActiveSession } from "../src/middleware/auth.middleware.js";
 
 function makeResponse() {

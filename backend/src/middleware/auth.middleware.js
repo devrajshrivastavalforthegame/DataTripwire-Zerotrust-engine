@@ -15,12 +15,12 @@ export async function authenticate(req, res, next) {
         const user = await findUserById(payload.sub);
         const session = await findSessionById(payload.sessionId);
 
-        if (!user || user.status !== "active" || !session || session.user_id !== user.id || session.status === "ended") {
+        if (!user || user.status !== "active" || !session || session.user_id !== user.id || session.status === "ended" || !["employee", "admin"].includes(session.portal) || payload.portal !== session.portal) {
             return res.status(401).json({ error: "Invalid session" });
         }
 
         await updateSessionActivity(session.id);
-        req.auth = { user, session, tokenPayload: payload };
+        req.auth = { user, session, tokenPayload: payload, portal: session.portal };
         next();
     } catch (error) {
         console.error("AUTH ERROR:", error);
@@ -34,4 +34,19 @@ export function requireActiveSession(req, res, next) {
     }
 
     next();
+}
+
+
+export function requirePortal(expectedPortal) {
+    return (req, res, next) => {
+        const actualPortal = req.auth?.session?.portal;
+        if (!actualPortal || actualPortal !== expectedPortal) {
+            return res.status(403).json({
+                error: "This session is not authorized for the selected portal",
+                code: "PORTAL_MISMATCH",
+                requiredPortal: expectedPortal
+            });
+        }
+        return next();
+    };
 }

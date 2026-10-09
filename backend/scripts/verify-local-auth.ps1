@@ -84,14 +84,25 @@ ExpectStatus "Admin denied employee portal" 403 {
   $b=@{email="admin@datatripwire.local";password="Admin@123";portal="employee"} | ConvertTo-Json
   Invoke-RestMethod "http://127.0.0.1:3000/api/v1/auth/login" -Method Post -ContentType "application/json" -Body $b -TimeoutSec 10
 }
+# Use a fresh admin session here; the per-account test already logged its session out.
+$adminToken = ""
+try {
+  $adminBody = @{email="admin@datatripwire.local";password="Admin@123";portal="admin"} | ConvertTo-Json
+  $adminLogin = Invoke-RestMethod "http://127.0.0.1:3000/api/v1/auth/login" -Method Post -ContentType "application/json" -Body $adminBody -TimeoutSec 10
+  $adminToken = [string]$adminLogin.accessToken
+  Check "Admin login for Data Exposure tests" (![string]::IsNullOrWhiteSpace($adminToken) -and $adminLogin.user.role -eq "security_manager") ("role={0}" -f $adminLogin.user.role)
+} catch {
+  $msg=$_.ErrorDetails.Message; if (!$msg) {$msg=$_.Exception.Message}
+  Check "Admin login for Data Exposure tests" $false $msg
+}
 ExpectStatus "Data Exposure rejects unauthenticated request" 401 { Invoke-RestMethod "http://127.0.0.1:3000/api/v1/security/data-exposure?window=7d&limit=50" -TimeoutSec 10 }
 if (!$adminToken) {
   foreach ($w in @("24h","7d","30d")) { Check "Data Exposure $w" $false "Skipped: admin login failed" }
 } else {
-  $headers = @{Authorization="Bearer $adminToken"}
+  $exposureHeaders = @{Authorization="Bearer $adminToken"}
   foreach ($w in @("24h","7d","30d")) {
     try {
-      $r = Invoke-RestMethod "http://127.0.0.1:3000/api/v1/security/data-exposure?window=$w&limit=50" -Headers $headers -TimeoutSec 15
+      $r = Invoke-RestMethod "http://127.0.0.1:3000/api/v1/security/data-exposure?window=$w&limit=50" -Headers $exposureHeaders -TimeoutSec 15
       $ok = ($r.window.key -eq $w -and $null -ne $r.users -and $r.generated_at)
       if ($ok -and @($r.users).Count -gt 0) {
         foreach ($u in $r.users) {
@@ -104,6 +115,14 @@ if (!$adminToken) {
       Check "Data Exposure $w" $false $msg
     }
   }
+  try {
+    $out = Invoke-RestMethod "http://127.0.0.1:3000/api/v1/auth/logout" -Method Post -Headers $exposureHeaders -TimeoutSec 10
+    Check "Admin logout after Data Exposure" ($out.status -eq "ok") $out.status
+  } catch {
+    $msg=$_.ErrorDetails.Message; if (!$msg) {$msg=$_.Exception.Message}
+    Check "Admin logout after Data Exposure" $false $msg
+  }
+  ExpectStatus "Admin exposure token invalidated" 401 { Invoke-RestMethod "http://127.0.0.1:3000/api/v1/auth/me" -Headers $exposureHeaders -TimeoutSec 10 }
 }
 Write-Output "`n=== RESULTS ==="
 $checks | Format-Table -Wrap -AutoSize

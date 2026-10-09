@@ -11,7 +11,10 @@ jest.unstable_mockModule("../src/services/auth/session.repository.js", () => ({
     updateSessionActivity: jest.fn()
 }));
 
-const { requireActiveSession, requirePortal } = await import("../src/middleware/auth.middleware.js");
+const { requireActiveSession, requirePortal, authenticate } = await import("../src/middleware/auth.middleware.js");
+const { verifyAccessToken } = await import("../src/services/auth/token.service.js");
+const { findUserById } = await import("../src/services/auth/user.repository.js");
+const { findSessionById, updateSessionActivity } = await import("../src/services/auth/session.repository.js");
 
 function responseMock() {
     return {
@@ -81,5 +84,54 @@ describe("requirePortal", () => {
         expect(res.statusCode).toBe(403);
         expect(res.payload.code).toBe("PORTAL_MISMATCH");
         expect(res.payload.requiredPortal).toBe(expectedPortal);
+    });
+});
+
+
+describe("authenticate portal binding", () => {
+    beforeEach(() => {
+        verifyAccessToken.mockReset();
+        findUserById.mockReset();
+        findSessionById.mockReset();
+        updateSessionActivity.mockReset();
+    });
+
+    async function runAuthentication({ tokenPortal = "employee", userRole = "employee", sessionPortal = "employee" } = {}) {
+        verifyAccessToken.mockReturnValue({ sub: "user-1", sessionId: "session-1", portal: tokenPortal });
+        findUserById.mockResolvedValue({ id: "user-1", role: userRole, status: "active" });
+        findSessionById.mockResolvedValue({ id: "session-1", user_id: "user-1", role: userRole, status: "active", portal: sessionPortal });
+        updateSessionActivity.mockResolvedValue({});
+        const req = { headers: { authorization: "Bearer test-token" } };
+        const res = responseMock();
+        let nextCalled = false;
+        await authenticate(req, res, () => { nextCalled = true; });
+        return { req, res, nextCalled };
+    }
+
+    test("accepts matching token, user role, and persisted session portal", async () => {
+        const { req, res, nextCalled } = await runAuthentication({
+            tokenPortal: "employee",
+            userRole: "manager",
+            sessionPortal: "employee"
+        });
+
+        expect(nextCalled).toBe(true);
+        expect(res.statusCode).toBe(200);
+        expect(req.auth.portal).toBe("employee");
+        expect(updateSessionActivity).toHaveBeenCalledWith("session-1");
+    });
+
+    test.each([
+        ["admin token", { tokenPortal: "admin", userRole: "employee", sessionPortal: "employee" }],
+        ["admin session for employee role", { tokenPortal: "admin", userRole: "employee", sessionPortal: "admin" }],
+        ["employee token for security manager", { tokenPortal: "employee", userRole: "security_manager", sessionPortal: "employee" }],
+        ["unknown persisted portal", { tokenPortal: "employee", userRole: "employee", sessionPortal: "legacy" }]
+    ])("rejects %s", async (_label, config) => {
+        const { res, nextCalled } = await runAuthentication(config);
+
+        expect(nextCalled).toBe(false);
+        expect(res.statusCode).toBe(401);
+        expect(res.payload.code).toBe("PORTAL_SESSION_INVALID");
+        expect(updateSessionActivity).not.toHaveBeenCalled();
     });
 });

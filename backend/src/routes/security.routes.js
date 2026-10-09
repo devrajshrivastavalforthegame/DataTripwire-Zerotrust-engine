@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { authenticate, requireActiveSession } from "../middleware/auth.middleware.js";
+import { authenticate, requireActiveSession, requirePortal } from "../middleware/auth.middleware.js";
 import { behaviorController } from "../controllers/behavior.controller.js";
 import { rebuildBaseline, getBaseline } from "../controllers/baseline.controller.js";
 import { decoyController } from "../controllers/deception.controller.js";
@@ -19,7 +19,7 @@ import {
 import { requirePermission } from "../middleware/authorization.middleware.js";
 import { requireProtectedAction } from "../middleware/policy.middleware.js";
 
-const router = Router();
+const router = Router();\nrouter.use(authenticate, requirePortal("admin"));
 
 router.post(
     "/events",
@@ -41,7 +41,7 @@ router.get(
     requirePermission("incidents", "read"),
     listIncidents
 );
-router.post("/incidents/:id/resolve", authenticate, requireActiveSession, requirePermission("incidents", "resolve"), requireProtectedAction, resolveIncident);
+router.post("/incidents/:id/resolve", requireActiveSession, requirePermission("incidents", "resolve"), requireProtectedAction, resolveIncident);
 
 router.get(
     "/resources",

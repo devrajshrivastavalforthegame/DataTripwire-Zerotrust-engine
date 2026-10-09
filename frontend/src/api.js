@@ -7,7 +7,7 @@ async function request(url,options={}){
   const headers={"Content-Type":"application/json",...(options.headers||{})};
   if(token) headers.Authorization="Bearer "+token;
   const r=await fetch(url,{...options,headers});
-  if(!r.ok){let detail="Request failed with "+r.status;try{const body=await r.json();detail=body.detail?.message||body.detail||body.error?.message||detail}catch{};const e=new Error(detail);e.status=r.status;throw e}
+  if(!r.ok){let detail="Request failed with "+r.status;try{const body=await r.json();detail=body.detail?.message||body.detail||body.error?.message||detail}catch{};const e=new Error(typeof detail === "string" ? detail : JSON.stringify(detail));e.status=r.status;throw e}
   return r.status===204?null:r.json();
 }
 export const api={
@@ -20,8 +20,7 @@ export const api={
   resources:()=>request(API_BASE_URL+"/api/v1/resources"),
   accessResource:(id,payload)=>request(API_BASE_URL+"/api/v1/resources/"+id+"/access",{method:"POST",body:JSON.stringify(payload)}),
   securityOverview:()=>request(API_BASE_URL+"/api/v1/security/overview"),
-  // Proposed endpoint: confirm the path and query parameter with Devraj/Rohith before backend integration.
-  securityDataExposure:(windowKey="7d")=>request(API_BASE_URL+"/api/v1/security/data-exposure?window="+encodeURIComponent(windowKey)),
+  securityDataExposure:(windowKey="7d",limit=50)=>request(API_BASE_URL+"/api/v1/security/data-exposure?window="+encodeURIComponent(windowKey)+"&limit="+encodeURIComponent(limit)),
   securityActivity:()=>request(API_BASE_URL+"/api/v1/security/activity"),
   securityIncidents:()=>request(API_BASE_URL+"/api/v1/security/incidents"),
   securityAudit:()=>request(API_BASE_URL+"/api/v1/security/audit"),
@@ -39,7 +38,7 @@ export const api={
   createTask:(payload)=>request(API_BASE_URL+"/api/v1/workspace/tasks",{method:"POST",body:JSON.stringify(payload)}),
   updateTask:(id,payload)=>request(API_BASE_URL+"/api/v1/workspace/tasks/"+encodeURIComponent(id),{method:"PATCH",body:JSON.stringify(payload)}),
   sendMessage:(payload)=>request(API_BASE_URL+"/api/v1/workspace/messages",{method:"POST",body:JSON.stringify(payload)}),
-  decideApproval:(id,decision)=>request(API_BASE_URL+"/api/v1/workspace/approvals/"+encodeURIComponent(id)+"/"+decision,{method:"POST"}),
+  decideApproval:(id,decision)=>request(API_BASE_URL+"/api/v1/workspace/approvals/"+id+"/"+decision,{method:"POST"}),
   updateProfile:(payload)=>request(API_BASE_URL+"/api/v1/workspace/profile",{method:"PUT",body:JSON.stringify(payload)}),
   updateWorkspaceSettings:(payload)=>request(API_BASE_URL+"/api/v1/workspace/settings",{method:"PUT",body:JSON.stringify(payload)}),
   analyzeBehaviour:(payload)=>request(AI_SERVICE_URL+"/api/v1/analyze",{method:"POST",body:JSON.stringify(payload)})

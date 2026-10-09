@@ -44,25 +44,22 @@ export async function accessProtectedResource(req, res) {
 
   const event = eventResult.rows[0];
 
-const telemetryAction = ({
+  const telemetryAction = ({
   OPEN: "VIEW",
   DOWNLOAD: "DOWNLOAD",
-  COPY: "COPY",
-})[String(action).toUpperCase()] || "VIEW";
+    COPY: "COPY",
+  })[String(action).toUpperCase()] || "VIEW";
 
   event.metadata = {
     ...(event.metadata || {}),
-    resource_type: resource.sensitivity === "RESTRICTED" ? "restricted" : resource.sensitivity === "CONFIDENTIAL" ? "confidential" : resource.resource_type,
-    high_impact_action: ["DOWNLOAD","COPY"].includes(String(action).toUpperCase())
+    resource_type: ["RESTRICTED", "CONFIDENTIAL"].includes(String(resource.sensitivity).toUpperCase())
+      ? String(resource.sensitivity).toLowerCase()
+      : resource.resource_type,
+    high_impact_action: ["DOWNLOAD", "COPY"].includes(String(action).toUpperCase()),
   };
   await query(`UPDATE behavior_events SET metadata=$1 WHERE id=$2`, [JSON.stringify(event.metadata), event.id]);
   const isHighImpact = ["DOWNLOAD","COPY"].includes(String(action).toUpperCase());
 
-
-  // Protected-resource sensitivity and high-impact actions are explicit risk signals.
-  if (resource.sensitivity === "RESTRICTED") event.metadata.resource_type = "restricted";
-  else if (resource.sensitivity === "CONFIDENTIAL") event.metadata.resource_type = "confidential";
-  if (isHighImpact) event.metadata.high_impact_action = true;
 
   const protectedPoints =
     resource.resource_type === "CREDENTIALS"

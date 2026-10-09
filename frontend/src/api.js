@@ -41,6 +41,8 @@ export const api={
   securityResponses:async()=>{const x=await request(API_BASE_URL+"/api/v1/security/responses");return x.responses||[]},
   securityResources:async()=>{const x=await request(API_BASE_URL+"/api/v1/security/resources");return x.resources||[]},
   usersRisk:async()=>{const x=await request(API_BASE_URL+"/api/v1/security/users-risk");return x.users||[]},
+  rbac:()=>request(API_BASE_URL+"/api/v1/rbac"),
+  toggleRolePermission:(roleId,permissionId)=>request(API_BASE_URL+"/api/v1/rbac/roles/"+encodeURIComponent(roleId)+"/permissions/"+encodeURIComponent(permissionId)+"/toggle",{method:"POST"}),
   updateSecurityResource:(id,payload)=>request(API_BASE_URL+"/api/v1/security/resources/"+id,{method:"PATCH",body:JSON.stringify(payload)}),
   restrictSession:(id,reason)=>request(API_BASE_URL+"/api/v1/security/sessions/"+encodeURIComponent(id)+"/restrict",{method:"POST",body:JSON.stringify({reason})}),
   quarantineSession:(id,reason)=>request(API_BASE_URL+"/api/v1/security/sessions/"+encodeURIComponent(id)+"/quarantine",{method:"POST",body:JSON.stringify({reason})}),

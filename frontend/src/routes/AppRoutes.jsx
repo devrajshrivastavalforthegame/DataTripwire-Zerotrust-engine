@@ -15,6 +15,7 @@ import Calendar from "../pages/workshepher/Calendar";
 import Messages from "../pages/workshepher/Messages";
 import Profile from "../pages/workshepher/Profile";
 import Settings from "../pages/workshepher/Settings";
+import Help from "../pages/workshepher/Help";
 
 import SecurityOverview from "../pages/security/Overview";
 import LiveActivity from "../pages/security/LiveActivity";
@@ -48,6 +49,7 @@ export default function AppRoutes() {
         <Route path="/messages" element={<Messages />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/help" element={<Help />} />
       </Route>
 
       <Route element={<AuthGate security><SecurityLayout /></AuthGate>}>

@@ -35,6 +35,7 @@ export const api={
   securityOverview:()=>request(API_BASE_URL+"/api/v1/security/overview"),
   securityActivity:()=>request(API_BASE_URL+"/api/v1/security/activity"),
   securityIncidents:async()=>{const x=await request(API_BASE_URL+"/api/v1/security/incidents");return x.incidents||[]},
+  resolveIncident:(id)=>request(API_BASE_URL+"/api/v1/security/incidents/"+encodeURIComponent(id)+"/resolve",{method:"POST"}),
   securityAudit:async()=>{const x=await request(API_BASE_URL+"/api/v1/security/audit");return x.audit||[]},
   securitySessions:async()=>{const x=await request(API_BASE_URL+"/api/v1/security/sessions");return x.sessions||[]},
   securityPolicies:()=>request(API_BASE_URL+"/api/v1/security/policies"),

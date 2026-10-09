@@ -1,4 +1,5 @@
 import { motion } from "motion/react";
+import DataExposureRisk from "../../components/security/DataExposureRisk";
 import {
   Users,
   ShieldCheck,
@@ -186,6 +187,8 @@ export default function Overview() {
           </div>
         </section>
       </div>
+
+      <DataExposureRisk />
 
       <div className="sec-overview-grid lower">
 

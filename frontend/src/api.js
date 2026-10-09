@@ -20,6 +20,8 @@ export const api={
   resources:()=>request(API_BASE_URL+"/api/v1/resources"),
   accessResource:(id,payload)=>request(API_BASE_URL+"/api/v1/resources/"+id+"/access",{method:"POST",body:JSON.stringify(payload)}),
   securityOverview:()=>request(API_BASE_URL+"/api/v1/security/overview"),
+  // Proposed endpoint: confirm the path and query parameter with Devraj/Rohith before backend integration.
+  securityDataExposure:(windowKey="7d")=>request(API_BASE_URL+"/api/v1/security/data-exposure?window="+encodeURIComponent(windowKey)),
   securityActivity:()=>request(API_BASE_URL+"/api/v1/security/activity"),
   securityIncidents:()=>request(API_BASE_URL+"/api/v1/security/incidents"),
   securityAudit:()=>request(API_BASE_URL+"/api/v1/security/audit"),

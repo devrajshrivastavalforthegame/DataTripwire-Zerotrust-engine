@@ -17,7 +17,24 @@ import { ensureDemoUsers } from "./services/demo-seed.service.js";
 const app = express();
 app.disable("x-powered-by");
 app.use(helmet());
-app.use(cors({origin:true,credentials:true}));
+const allowedOrigins = new Set(
+  (process.env.CORS_ORIGINS ??
+    (process.env.NODE_ENV === "production"
+      ? ""
+      : "http://localhost:5173,http://127.0.0.1:5173"))
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean)
+);
+
+app.use(cors({
+  origin(origin, callback) {
+    // Permit non-browser clients and same-origin requests without an Origin header.
+    if (!origin || allowedOrigins.has(origin)) return callback(null, true);
+    return callback(null, false);
+  },
+  credentials: true
+}));
 app.use(express.json({limit:"1mb"}));
 app.use(rateLimit({windowMs:15*60*1000,max:300,standardHeaders:true,legacyHeaders:false}));
 app.get("/health",(_,res)=>res.json({status:"ok",service:"datatripwire-backend"}));

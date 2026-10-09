@@ -25,7 +25,7 @@ export default function Documents() {
     try{
       const response=await api.accessResource(doc.id,{action});
       setResult(response);
-      setMessage(response.allowed?\`Access allowed — risk \${response.risk.score}/100\`:\`Access blocked by continuous trust policy — risk \${response.risk.score}/100\`);
+      setMessage(response.allowed ? `Access allowed — risk ${response.risk?.score ?? 0}/100` : `Access blocked by continuous trust policy — risk ${response.risk?.score ?? 0}/100`);
     }catch(e){setMessage(e.status===403?"This action is temporarily unavailable for your current session.":"We could not complete that action. Please try again.");setResult(e.body||e);}
     finally{setBusy("");}
   }

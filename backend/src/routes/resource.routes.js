@@ -13,6 +13,6 @@ const router = Router();
 router.get("/", authenticate, requirePermission("documents", "read"), listResources);
 
 // Enforce session state and the permission required by the requested access action.
-router.post("/:id/access", authenticate, requireActiveSession, requireProtectedAction, requireResourceAccessPermission, accessProtectedResource);
+router.post("/:id/access", authenticate, requireActiveSession, requireResourceAccessPermission, requireProtectedAction, accessProtectedResource);
 
 export default router;

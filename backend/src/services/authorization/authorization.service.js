@@ -108,17 +108,26 @@ export async function hasResponsibility(
     return false;
   }
 
+  // A broader grant may cover narrower scopes; narrower grants never expand upward.
+  // These values must stay aligned with chk_user_responsibility_scope in migration 004.
+  const scopeGrants = {
+    OWN: ["OWN"],
+    ASSIGNED: ["OWN", "ASSIGNED"],
+    TEAM: ["OWN", "ASSIGNED", "TEAM"],
+    ORGANIZATION: ["OWN", "ASSIGNED", "TEAM", "ORGANIZATION"]
+  };
+
   const values = [userId, responsibility];
   let scopeClause = "";
 
-  if (requiredScope) {
-    values.push(requiredScope);
-    scopeClause = `
-      AND (
-        ur.scope = $3
-        OR ur.scope = 'ORGANIZATION'
-      )
-    `;
+  if (requiredScope !== null && requiredScope !== undefined) {
+    const acceptedGrantScopes = scopeGrants[String(requiredScope).trim().toUpperCase()];
+    if (!acceptedGrantScopes) {
+      return false;
+    }
+
+    values.push(acceptedGrantScopes);
+    scopeClause = "AND ur.scope = ANY($3::text[])";
   }
 
   const result = await pool.query(

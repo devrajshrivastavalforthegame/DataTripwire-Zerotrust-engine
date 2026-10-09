@@ -50,6 +50,8 @@ export const api={
   sessionTimeline:(id)=>request(API_BASE_URL+"/api/v1/security/sessions/"+encodeURIComponent(id)+"/timeline"),
   workspaceState:()=>request(API_BASE_URL+"/api/v1/workspace/state"),
   workspaceStateUpdate:(data)=>request(API_BASE_URL+"/api/v1/workspace/state",{method:"PUT",body:JSON.stringify({data})}),
+  workspaceTeam:()=>request(API_BASE_URL+"/api/v1/workspace/team"),
+  workspaceReports:()=>request(API_BASE_URL+"/api/v1/workspace/reports"),
   workspaceAction:(action,target,metadata={})=>request(API_BASE_URL+"/api/v1/workspace/actions",{method:"POST",body:JSON.stringify({action,target,metadata})}),
   createTask:(payload)=>request(API_BASE_URL+"/api/v1/workspace/tasks",{method:"POST",body:JSON.stringify(payload)}),
   createProject:(payload)=>request(API_BASE_URL+"/api/v1/workspace/projects",{method:"POST",body:JSON.stringify(payload)}),

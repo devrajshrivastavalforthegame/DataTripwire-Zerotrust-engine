@@ -52,9 +52,11 @@ export const api={
   workspaceStateUpdate:(data)=>request(API_BASE_URL+"/api/v1/workspace/state",{method:"PUT",body:JSON.stringify({data})}),
   workspaceAction:(action,target,metadata={})=>request(API_BASE_URL+"/api/v1/workspace/actions",{method:"POST",body:JSON.stringify({action,target,metadata})}),
   createTask:(payload)=>request(API_BASE_URL+"/api/v1/workspace/tasks",{method:"POST",body:JSON.stringify(payload)}),
+  createProject:(payload)=>request(API_BASE_URL+"/api/v1/workspace/projects",{method:"POST",body:JSON.stringify(payload)}),
   updateTask:(id,payload)=>request(API_BASE_URL+"/api/v1/workspace/tasks/"+encodeURIComponent(id),{method:"PATCH",body:JSON.stringify(payload)}),
   sendMessage:(payload)=>request(API_BASE_URL+"/api/v1/workspace/messages",{method:"POST",body:JSON.stringify(payload)}),
   decideApproval:(id,decision)=>request(API_BASE_URL+"/api/v1/workspace/approvals/"+encodeURIComponent(id)+"/"+decision,{method:"POST"}),
+  createCalendarEvent:(payload)=>request(API_BASE_URL+"/api/v1/workspace/calendar/events",{method:"POST",body:JSON.stringify(payload)}),
   updateProfile:(payload)=>request(API_BASE_URL+"/api/v1/workspace/profile",{method:"PUT",body:JSON.stringify(payload)}),
   updateWorkspaceSettings:(payload)=>request(API_BASE_URL+"/api/v1/workspace/settings",{method:"PUT",body:JSON.stringify(payload)}),
   analyzeBehaviour:(payload)=>request(AI_SERVICE_URL+"/api/v1/analyze",{method:"POST",body:JSON.stringify(payload)})

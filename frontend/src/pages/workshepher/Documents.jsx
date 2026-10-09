@@ -15,10 +15,6 @@ export default function Documents() {
   const [busy,setBusy]=useState("");
   const [message,setMessage]=useState("");
   const [result,setResult]=useState(null);
-  const [stepUpRequest,setStepUpRequest]=useState(null);
-  const [stepUpPassword,setStepUpPassword]=useState("");
-  const [stepUpError,setStepUpError]=useState("");
-  const [verifyingStepUp,setVerifyingStepUp]=useState(false);
 
   useEffect(()=>{api.resources().then(x=>setResources(x.resources||x||[])).catch(e=>setMessage(e.message));},[]);
   const docs=useMemo(()=>resources.filter(d=>(filter==="All"||filter==="Protected"&&d.sensitivity!=="PUBLIC"||filter==="Recent")&&[d.name,d.resource_type,d.sensitivity,d.description].join(" ").toLowerCase().includes(q.toLowerCase())),[resources,q,filter]);
@@ -30,36 +26,10 @@ export default function Documents() {
       const response=await api.accessResource(doc.id,{action});
       setResult(response);
       setMessage(response.allowed ? `Access allowed — risk ${response.risk?.score ?? 0}/100` : `Access blocked by continuous trust policy — risk ${response.risk?.score ?? 0}/100`);
-    }catch(e){
-      setResult(e.body||e);
-      if(e.body?.code==="STEP_UP_REQUIRED"){
-        setStepUpRequest({doc,action});setStepUpPassword("");setStepUpError("");
-        setMessage("Additional identity verification is required for this protected action.");
-      }else{
-        setMessage(e.body?.error||(e.status===403?"This action is unavailable for your current session.":"We could not complete that action. Please try again."));
-      }
-    }
+    }catch(e){setMessage(e.body?.error||(e.status===403?"This action is unavailable for your current session.":"We could not complete that action. Please try again."));setResult(e.body||e);}
     finally{setBusy("");}
   }
 
-  async function verifyStepUp(event){
-    event.preventDefault();
-    if(!stepUpRequest)return;
-    setVerifyingStepUp(true);setStepUpError("");
-    try{
-      await api.stepUp(stepUpPassword);
-      const response=await api.accessResource(stepUpRequest.doc.id,{action:stepUpRequest.action});
-      setResult(response);
-      setMessage(response.allowed ? `Access allowed — risk ${response.risk?.score ?? 0}/100` : `Access blocked by continuous trust policy — risk ${response.risk?.score ?? 0}/100`);
-      setStepUpRequest(null);setStepUpPassword("");
-    }catch(e){
-      setResult(e.body||e);
-      setStepUpError(e.body?.error||e.message||"Verification failed. Please try again.");
-      if(e.body?.code && e.body.code!=="STEP_UP_INVALID_CREDENTIALS" && e.body.code!=="STEP_UP_PASSWORD_REQUIRED"){
-        setMessage(e.body.error||"The policy still blocks this action.");
-      }
-    }finally{setVerifyingStepUp(false)}
-  }
 
   return <div className="ws-page">
     <PageHeading eyebrow="WORKSPACE" title="Documents" description="Your organization's protected documents and resources." />
@@ -84,14 +54,6 @@ export default function Documents() {
         </motion.div>)}
       </div>
     </section>
-    {stepUpRequest&&<div className="ws-modal-overlay" role="presentation"><form className="ws-modal" onSubmit={verifyStepUp} aria-labelledby="step-up-title">
-      <button type="button" className="ws-modal-close" onClick={()=>{setStepUpRequest(null);setStepUpPassword("");setStepUpError("")}} aria-label="Cancel verification">×</button>
-      <h2 id="step-up-title">Verify your identity</h2>
-      <p>Confirm your password to continue {stepUpRequest.action.toLowerCase()} on <strong>{stepUpRequest.doc.name}</strong>.</p>
-      <label>Account password<input autoFocus type="password" autoComplete="current-password" value={stepUpPassword} onChange={e=>setStepUpPassword(e.target.value)} required /></label>
-      {stepUpError&&<div className="ws-login-error" role="alert">{stepUpError}</div>}
-      <div style={{display:"flex",justifyContent:"flex-end",gap:8,marginTop:12}}><button type="button" className="ws-secondary-button" onClick={()=>setStepUpRequest(null)}>Cancel</button><button type="submit" className="ws-primary-button" disabled={verifyingStepUp}>{verifyingStepUp?"Verifying…":"Verify and continue"}</button></div>
-    </form></div>}
 
   </div>;
 }

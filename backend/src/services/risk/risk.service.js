@@ -89,8 +89,10 @@ export function calculateScores({ event, baseline, previousScore = 0, isDecoy = 
 export async function evaluateAndSave({ userId, sessionId, event, isDecoy = false }) {
     const baselineResult = await query(`SELECT * FROM user_baselines WHERE user_id=$1`, [userId]);
     const baseline = baselineResult.rows[0] ?? null;
-    const previousResult = await query(`SELECT risk_score, sts_score FROM risk_decisions WHERE session_id=$1 ORDER BY created_at DESC LIMIT 1`, [sessionId]);
-    const previousScore = Number(previousResult.rows[0]?.risk_score ?? 0);
+    const previousResult = await query(`SELECT behavior_score, risk_score, sts_score FROM risk_decisions WHERE session_id=$1 ORDER BY created_at DESC LIMIT 1`, [sessionId]);
+    // Keep the behavior trajectory independent from the fused risk score.
+    // The fallback supports any legacy/mock row where behavior_score is absent.
+    const previousScore = Number(previousResult.rows[0]?.behavior_score ?? previousResult.rows[0]?.risk_score ?? 0);
 
     // Exposure analytics supplement existing scoring. If analytics are unavailable,
     // retain the existing behavior-risk path and do not invent an exposure score.
@@ -104,10 +106,10 @@ export async function evaluateAndSave({ userId, sessionId, event, isDecoy = fals
     const result = calculateScores({ event, baseline, previousScore, isDecoy, dataExposureRisk });
     const saved = await query(`
         INSERT INTO risk_decisions
-        (user_id,session_id,behavior_event_id,risk_score,decision,reasons,ai_assessment,previous_score,sts_score,ats_score,explanation,policy_id,risk_factors)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+        (user_id,session_id,behavior_event_id,risk_score,behavior_score,decision,reasons,ai_assessment,previous_score,sts_score,ats_score,explanation,policy_id,risk_factors)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
         RETURNING *`,
-        [userId, sessionId, event.id, result.score, result.decision, JSON.stringify(result.factors.map(f => f.type)), null,
+        [userId, sessionId, event.id, result.score, result.behaviorScore, result.decision, JSON.stringify(result.factors.map(f => f.type)), null,
          result.previousScore, result.sts, result.ats, result.explanation, "default-zero-trust-v2", JSON.stringify(result.factors)]);
     return { ...result, decisionId: saved.rows[0].id, riskDecision: saved.rows[0] };
 }

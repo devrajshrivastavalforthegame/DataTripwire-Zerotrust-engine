@@ -8313,3 +8313,297 @@ input:focus-visible {
 
 .dt-action-toast{position:fixed;right:24px;bottom:24px;z-index:9999;padding:11px 15px;border:1px solid rgba(120,140,190,.25);border-radius:12px;background:rgba(24,21,35,.94);color:#f7f5fb;box-shadow:0 14px 40px rgba(0,0,0,.25);font-size:12px;font-weight:600;backdrop-filter:blur(12px);animation:dtToastIn .18s ease-out}@keyframes dtToastIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .ws-new-menu{position:absolute;right:0;top:calc(100% + 8px);width:190px;padding:6px;border:1px solid #e4e9f1;border-radius:12px;background:#fff;box-shadow:0 16px 36px rgba(31,45,70,.14);z-index:1000}.ws-new-menu button{display:flex;align-items:center;gap:9px;width:100%;padding:10px 11px;border:0;border-radius:8px;background:transparent;color:#24314a;font-weight:600;text-align:left;cursor:pointer}.ws-new-menu button:hover{background:#f3f6fb}
+
+/* ============================================================
+   DATATRIPWIRE SOC — PROFESSIONAL MOTION SYSTEM
+   ============================================================ */
+
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap");
+
+.security-shell {
+  --soc-font: "IBM Plex Sans", "Inter", system-ui, sans-serif;
+  --soc-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --soc-purple-soft: rgba(139, 74, 214, 0.12);
+  --soc-purple-line: rgba(178, 119, 255, 0.16);
+  font-family: var(--soc-font);
+  background:
+    radial-gradient(circle at 74% 8%, rgba(125, 58, 211, 0.11), transparent 27%),
+    radial-gradient(circle at 18% 82%, rgba(73, 87, 151, 0.08), transparent 28%),
+    #0a0910;
+  isolation: isolate;
+}
+
+.security-shell::after {
+  content: "";
+  position: fixed;
+  inset: -5%;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(5, 4, 10, 0.72), rgba(8, 6, 16, 0.28) 48%, rgba(6, 4, 12, 0.66)),
+    url("./assets/soc-background.jpg") center / cover no-repeat;
+  opacity: 0.22;
+  filter: saturate(0.88) contrast(1.04);
+  transform: scale(1.05);
+  transform-origin: center;
+  animation: socBackgroundDrift 28s ease-in-out infinite alternate;
+  will-change: transform, background-position;
+}
+
+.security-shell > * {
+  position: relative;
+  z-index: 2;
+}
+
+.security-shell .security-grid,
+.security-shell .security-ambient,
+.security-shell .security-orb,
+.security-shell .security-stars,
+.security-shell .security-scan {
+  z-index: 1;
+}
+
+@keyframes socBackgroundDrift {
+  0% {
+    transform: scale(1.05) translate3d(-1.2%, -0.5%, 0);
+    background-position: 48% 50%;
+  }
+  50% {
+    transform: scale(1.09) translate3d(1%, 0.8%, 0);
+    background-position: 53% 47%;
+  }
+  100% {
+    transform: scale(1.06) translate3d(-0.6%, 1%, 0);
+    background-position: 46% 54%;
+  }
+}
+
+.security-shell .security-sidebar {
+  background: rgba(9, 8, 15, 0.76);
+  border-right-color: rgba(196, 166, 232, 0.11);
+  box-shadow: 14px 0 40px rgba(0, 0, 0, 0.12);
+}
+
+.security-shell .security-topbar {
+  background: rgba(10, 9, 16, 0.66);
+  border-bottom-color: rgba(201, 171, 234, 0.10);
+}
+
+.security-shell .security-brand-name,
+.security-shell .security-page-heading h1,
+.security-shell .security-panel-heading h2 {
+  font-family: var(--soc-font);
+  letter-spacing: -0.025em;
+}
+
+.security-shell .security-page-heading h1 {
+  font-weight: 700;
+}
+
+.security-shell .security-page-heading p,
+.security-shell .security-panel,
+.security-shell .security-metric-card {
+  text-rendering: optimizeLegibility;
+}
+
+.security-shell .security-eyebrow,
+.security-shell .security-live-indicator,
+.security-shell .nav-section-label,
+.security-shell .security-live-badge,
+.security-shell .monitoring-status {
+  font-family: var(--soc-mono);
+}
+
+.security-shell .security-eyebrow {
+  color: #9b8bad;
+  letter-spacing: 0.13em;
+}
+
+.security-shell .security-page-heading p {
+  color: #9a91a6;
+}
+
+.security-shell .security-panel,
+.security-shell .security-metric-card {
+  border-color: rgba(201, 170, 232, 0.105);
+  background:
+    linear-gradient(145deg, rgba(45, 35, 61, 0.74), rgba(22, 18, 30, 0.78));
+  box-shadow:
+    0 18px 55px rgba(0, 0, 0, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.025);
+}
+
+.security-shell .security-panel::before {
+  background:
+    linear-gradient(125deg, rgba(189, 137, 239, 0.035), transparent 35%, rgba(107, 184, 230, 0.018));
+}
+
+.security-shell .security-metric-card:hover,
+.security-shell .security-panel:hover {
+  border-color: rgba(190, 139, 238, 0.17);
+}
+
+.security-shell .security-metric-card strong,
+.security-shell .trust-ring strong {
+  font-family: var(--soc-mono);
+  font-weight: 600;
+}
+
+.security-shell .security-metric-card > span,
+.security-shell .service-row small,
+.security-shell .security-panel-heading small {
+  font-family: var(--soc-mono);
+  letter-spacing: 0.015em;
+}
+
+.security-shell .sidebar-link {
+  transition:
+    color 180ms cubic-bezier(.2,.8,.2,1),
+    background 180ms cubic-bezier(.2,.8,.2,1),
+    transform 180ms cubic-bezier(.2,.8,.2,1),
+    box-shadow 220ms ease;
+}
+
+.security-shell .sidebar-link:hover {
+  transform: translateX(3px);
+  box-shadow: inset 2px 0 0 rgba(174, 112, 239, 0.28);
+}
+
+.security-shell .sidebar-link.active {
+  background:
+    linear-gradient(90deg, rgba(137, 79, 205, 0.18), rgba(137, 79, 205, 0.055));
+  box-shadow:
+    inset 2px 0 0 rgba(184, 126, 244, 0.82),
+    0 5px 18px rgba(65, 28, 99, 0.12);
+}
+
+.security-shell .button,
+.security-shell button,
+.security-shell a,
+.security-shell input,
+.security-shell select,
+.security-shell textarea {
+  transition-timing-function: cubic-bezier(.2,.8,.2,1);
+}
+
+.security-shell button:not(:disabled),
+.security-shell a {
+  transition:
+    transform 180ms cubic-bezier(.2,.8,.2,1),
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    box-shadow 220ms ease,
+    filter 220ms ease;
+}
+
+.security-shell button:not(:disabled):hover,
+.security-shell a:hover {
+  transform: translateY(-1px);
+}
+
+.security-shell button:not(:disabled):active,
+.security-shell a:active {
+  transform: translateY(0) scale(0.985);
+}
+
+.security-shell input:focus-visible,
+.security-shell select:focus-visible,
+.security-shell textarea:focus-visible {
+  outline: 2px solid rgba(181, 119, 241, 0.42);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 5px rgba(145, 82, 205, 0.08);
+}
+
+.security-shell .security-topbar-user:hover,
+.security-shell .security-icon-button:hover {
+  box-shadow: 0 8px 22px rgba(77, 35, 108, 0.12);
+}
+
+.security-cursor-dot,
+.security-cursor-ring,
+.security-cursor-glow {
+  position: fixed;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  z-index: 100000;
+  opacity: 0;
+  transition: opacity 180ms ease, width 180ms ease, height 180ms ease, border-color 180ms ease, background 180ms ease;
+}
+
+.dt-security-cursor .security-cursor-dot,
+.dt-security-cursor .security-cursor-ring,
+.dt-security-cursor .security-cursor-glow {
+  opacity: 1;
+}
+
+.security-cursor-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #e7d7ff;
+  box-shadow: 0 0 12px rgba(185, 111, 255, 0.82);
+}
+
+.security-cursor-ring {
+  width: 28px;
+  height: 28px;
+  border: 1px solid rgba(206, 160, 255, 0.62);
+  border-radius: 50%;
+  background: rgba(137, 73, 203, 0.035);
+  backdrop-filter: blur(2px);
+  transform-origin: center;
+}
+
+.security-cursor-glow {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(151, 77, 220, 0.10), transparent 68%);
+  filter: blur(4px);
+  mix-blend-mode: screen;
+}
+
+.dt-cursor-hover .security-cursor-ring {
+  width: 40px;
+  height: 40px;
+  border-color: rgba(211, 171, 255, 0.86);
+  background: rgba(147, 82, 216, 0.055);
+}
+
+.dt-cursor-hover .security-cursor-dot {
+  width: 7px;
+  height: 7px;
+  background: #f2e8ff;
+}
+
+.dt-cursor-pressed .security-cursor-ring {
+  width: 22px;
+  height: 22px;
+}
+
+@media (pointer: coarse), (prefers-reduced-motion: reduce) {
+  .security-cursor-dot,
+  .security-cursor-ring,
+  .security-cursor-glow {
+    display: none;
+  }
+
+  .security-shell::after,
+  .security-grid,
+  .security-grid::after {
+    animation: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .security-shell *,
+  .security-shell *::before,
+  .security-shell *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

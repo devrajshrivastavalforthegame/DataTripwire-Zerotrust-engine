@@ -1,6 +1,5 @@
 import { Router } from "express";
-import { authenticate, requireActiveSession } from "../middleware/auth.middleware.js";
-import { requireProtectedAction } from "../middleware/policy.middleware.js";
+import { authenticate } from "../middleware/auth.middleware.js";
 import { requirePermission } from "../middleware/authorization.middleware.js";
 import { listResources } from "../controllers/resources.controller.js";
 import { accessProtectedResource } from "../controllers/resource-access.controller.js";
@@ -8,6 +7,10 @@ import { accessProtectedResource } from "../controllers/resource-access.controll
 const router = Router();
 
 router.get("/", authenticate, requirePermission("documents","read"), listResources);
-router.post("/:id/access", authenticate, requirePermission("documents","download"), requireProtectedAction, requireActiveSession, accessProtectedResource);
+
+// Every protected resource request reaches the continuous-trust pipeline first.
+// The controller records behaviour, evaluates risk, applies policy, and enforces
+// the resulting decision for this exact request.
+router.post("/:id/access", authenticate, requirePermission("documents","download"), accessProtectedResource);
 
 export default router;

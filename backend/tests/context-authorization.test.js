@@ -171,10 +171,10 @@ describe("hasResponsibility scope hierarchy", () => {
     beforeEach(() => query.mockReset());
 
     test.each([
-        ["OWN", ["OWN", "ASSIGNED", "TEAM", "ORGANIZATION"]],
-        ["ASSIGNED", ["ASSIGNED", "TEAM", "ORGANIZATION"]],
-        ["TEAM", ["TEAM", "ORGANIZATION"]],
-        ["ORGANIZATION", ["ORGANIZATION"]]
+        ["OWN", ["OWN"]],
+        ["ASSIGNED", ["OWN", "ASSIGNED"]],
+        ["TEAM", ["OWN", "ASSIGNED", "TEAM"]],
+        ["ORGANIZATION", ["OWN", "ASSIGNED", "TEAM", "ORGANIZATION"]]
     ])("maps %s grants to its permitted scope levels", async (requiredScope, expectedScopes) => {
         query.mockResolvedValue({ rows: [{ allowed: true }] });
 

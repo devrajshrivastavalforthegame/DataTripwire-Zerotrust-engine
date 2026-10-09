@@ -1,5 +1,28 @@
-const API_BASE_URL=import.meta.env.VITE_API_BASE_URL||"http://localhost:3000";
-const AI_SERVICE_URL=import.meta.env.VITE_AI_SERVICE_URL||"http://localhost:8000";
+const IS_PRODUCTION = Boolean(import.meta.env.PROD);
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || (IS_PRODUCTION ? "" : "http://localhost:3000")).replace(/\/$/, "");
+const AI_SERVICE_URL = import.meta.env.VITE_AI_SERVICE_URL || (IS_PRODUCTION ? "" : "http://localhost:8000");
+
+function assertSecureEndpoint(value, label) {
+  if (!value) {
+    // Empty production base intentionally means same-origin HTTPS API routing.
+    if (IS_PRODUCTION) return;
+    return;
+  }
+  let parsed;
+  try { parsed = new URL(value, window.location.origin); }
+  catch { throw new Error(`${label} must be a valid URL.`); }
+  if (IS_PRODUCTION && parsed.protocol !== "https:" && parsed.origin !== window.location.origin) {
+    throw new Error(`${label} must use HTTPS in production.`);
+  }
+  if (IS_PRODUCTION && /localhost|127\.0\.0\.1/.test(parsed.hostname)) {
+    throw new Error(`${label} cannot point to localhost in production.`);
+  }
+}
+if (IS_PRODUCTION && !API_BASE_URL) {
+  throw new Error("VITE_API_BASE_URL is required for production. Set it to your deployed HTTPS backend URL in Vercel project environment variables.");
+}
+assertSecureEndpoint(API_BASE_URL, "VITE_API_BASE_URL");
+if (AI_SERVICE_URL) assertSecureEndpoint(AI_SERVICE_URL, "VITE_AI_SERVICE_URL");
 export const AUTH_KEY="datatripwire.auth.v1";
 
 let stepUpHandler = null;
@@ -52,6 +75,7 @@ export const api={
   resources:()=>request(API_BASE_URL+"/api/v1/resources"),
   accessResource:(id,payload)=>request(API_BASE_URL+"/api/v1/resources/"+id+"/access",{method:"POST",body:JSON.stringify(payload)}),
   securityOverview:()=>request(API_BASE_URL+"/api/v1/security/overview"),
+  securityExposure:()=>request(API_BASE_URL+"/api/v1/security/data-exposure"),
   securityActivity:()=>request(API_BASE_URL+"/api/v1/security/activity"),
   securityIncidents:async()=>{const x=await request(API_BASE_URL+"/api/v1/security/incidents");return x.incidents||[]},
   resolveIncident:(id)=>request(API_BASE_URL+"/api/v1/security/incidents/"+encodeURIComponent(id)+"/resolve",{method:"POST"}),
@@ -81,5 +105,10 @@ export const api={
   createCalendarEvent:(payload)=>request(API_BASE_URL+"/api/v1/workspace/calendar/events",{method:"POST",body:JSON.stringify(payload)}),
   updateProfile:(payload)=>request(API_BASE_URL+"/api/v1/workspace/profile",{method:"PUT",body:JSON.stringify(payload)}),
   updateWorkspaceSettings:(payload)=>request(API_BASE_URL+"/api/v1/workspace/settings",{method:"PUT",body:JSON.stringify(payload)}),
-  analyzeBehaviour:(payload)=>request(AI_SERVICE_URL+"/api/v1/analyze",{method:"POST",body:JSON.stringify(payload)})
+  analyzeBehaviour:(payload)=>{
+    if (IS_PRODUCTION && !AI_SERVICE_URL) {
+      throw new Error("Direct browser access to the AI service is disabled in production. Route AI analysis through the authenticated backend.");
+    }
+    return request(AI_SERVICE_URL+"/api/v1/analyze",{method:"POST",body:JSON.stringify(payload)});
+  }
 };

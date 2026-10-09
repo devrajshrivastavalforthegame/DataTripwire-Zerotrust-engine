@@ -19,12 +19,24 @@ app = FastAPI(
     version="1.0.0",
 )
 
+# Keep browser access opt-in. In production, configure AI_ALLOWED_ORIGINS with
+# exact HTTPS origins. Backend-to-AI service traffic does not use browser CORS.
+_default_ai_origins = (
+    "http://localhost:5173,http://127.0.0.1:5173"
+    if __import__("os").environ.get("NODE_ENV", "development").lower() != "production"
+    else ""
+)
+_ai_origins = [
+    origin.strip()
+    for origin in __import__("os").environ.get("AI_ALLOWED_ORIGINS", _default_ai_origins).split(",")
+    if origin.strip()
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_ai_origins,
     allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST"],
+    allow_headers=["Authorization", "Content-Type"],
 )
 
 
@@ -41,12 +53,13 @@ class TimeContext(BaseModel):
 
 
 class ActivityContext(BaseModel):
-    requests_per_minute: float = Field(default=0, ge=0)
-    unique_resources: int = Field(default=0, ge=0)
-    records_accessed: int = Field(default=0, ge=0)
-    download_volume_mb: float = Field(default=0, ge=0)
-    authorization_failures: int = Field(default=0, ge=0)
-    cross_domain_access: int = Field(default=0, ge=0)
+    # None means "not measured"; zero means measured and none observed.
+    requests_per_minute: float | None = Field(default=None, ge=0)
+    unique_resources: int | None = Field(default=None, ge=0)
+    records_accessed: int | None = Field(default=None, ge=0)
+    download_volume_mb: float | None = Field(default=None, ge=0)
+    authorization_failures: int | None = Field(default=None, ge=0)
+    cross_domain_access: int | None = Field(default=None, ge=0)
 
 
 class SecurityContext(BaseModel):
@@ -60,8 +73,9 @@ class SecurityContext(BaseModel):
     ats: float = 0
     session_status: str = "active"
 
-    task_match: bool = True
-    responsibility_match: bool = True
+    # None means the backend has not measured/confirmed this relationship.
+    task_match: bool | None = None
+    responsibility_match: bool | None = None
     sensitive_resource: bool = False
     deception_interaction: bool = False
 
@@ -91,7 +105,14 @@ def health():
 
 def analyze_behaviour(data: AnalyzeRequest):
     signals = []
-    score_components = []
+    score_by_signal = {}
+
+    def add_signal(name, weight):
+        if name not in signals:
+            signals.append(name)
+        # The same signal can arrive from backend reasons and derived context.
+        # Keep the strongest single contribution rather than counting it twice.
+        score_by_signal[name] = max(score_by_signal.get(name, 0.0), weight)
 
     # Consume evidence already identified by the backend Risk Engine.
     for reason in data.reasons:
@@ -112,80 +133,72 @@ def analyze_behaviour(data: AnalyzeRequest):
 
     for reason in data.reasons:
         if reason in reason_weights:
-            score_components.append(reason_weights[reason])
+            add_signal(reason, reason_weights[reason])
 
 
     if data.device.is_new:
-        signals.append("new_device")
-        score_components.append(0.10)
+        add_signal("new_device", 0.10)
 
     if data.location.is_new:
-        signals.append("new_location")
-        score_components.append(0.08)
+        add_signal("new_location", 0.08)
 
     if data.time_context.is_unusual:
-        signals.append("unusual_time")
-        score_components.append(0.08)
+        add_signal("unusual_time", 0.08)
 
-    if data.activity.requests_per_minute >= 60:
-        signals.append("high_request_volume")
-        score_components.append(0.18)
-    elif data.activity.requests_per_minute >= 30:
-        signals.append("elevated_request_volume")
-        score_components.append(0.10)
+    if data.activity.requests_per_minute is not None and data.activity.requests_per_minute >= 60:
+        add_signal("high_request_volume", 0.18)
+    elif data.activity.requests_per_minute is not None and data.activity.requests_per_minute >= 30:
+        add_signal("elevated_request_volume", 0.10)
 
-    if data.activity.authorization_failures >= 5:
-        signals.append("authorization_failures")
-        score_components.append(0.15)
-    elif data.activity.authorization_failures >= 2:
-        signals.append("elevated_authorization_failures")
-        score_components.append(0.08)
+    if data.activity.authorization_failures is not None and data.activity.authorization_failures >= 5:
+        add_signal("authorization_failures", 0.15)
+    elif data.activity.authorization_failures is not None and data.activity.authorization_failures >= 2:
+        add_signal("elevated_authorization_failures", 0.08)
 
-    if data.activity.cross_domain_access >= 3:
-        signals.append("cross_domain_access")
-        score_components.append(0.15)
+    if data.activity.cross_domain_access is not None and data.activity.cross_domain_access >= 3:
+        add_signal("cross_domain_access", 0.15)
 
-    if data.activity.unique_resources >= 15:
-        signals.append("resource_enumeration")
-        score_components.append(0.15)
+    if data.activity.unique_resources is not None and data.activity.unique_resources >= 15:
+        add_signal("resource_enumeration", 0.15)
 
-    if data.activity.download_volume_mb >= 100:
-        signals.append("high_download_volume")
-        score_components.append(0.12)
+    if data.activity.download_volume_mb is not None and data.activity.download_volume_mb >= 100:
+        add_signal("high_download_volume", 0.12)
 
-    if not data.context.task_match:
-        signals.append("task_mismatch")
-        score_components.append(0.12)
+    if data.context.task_match is False:
+        add_signal("task_mismatch", 0.12)
 
-    if not data.context.responsibility_match:
-        signals.append("responsibility_mismatch")
-        score_components.append(0.15)
+    if data.context.responsibility_match is False:
+        add_signal("responsibility_mismatch", 0.15)
 
     if data.context.sensitive_resource:
-        signals.append("sensitive_resource_access")
-        score_components.append(0.10)
+        add_signal("sensitive_resource_access", 0.10)
 
     if data.context.deception_interaction:
-        signals.append("deception_interaction")
-        score_components.append(0.25)
+        add_signal("deception_interaction", 0.25)
 
     ml_features = {
-        "requests_per_minute": data.activity.requests_per_minute,
-        "unique_resources": data.activity.unique_resources,
-        "records_accessed": data.activity.records_accessed,
-        "download_volume_mb": data.activity.download_volume_mb,
-        "authorization_failures": data.activity.authorization_failures,
-        "cross_domain_access": data.activity.cross_domain_access,
+        key: value for key, value in {
+            "requests_per_minute": data.activity.requests_per_minute,
+            "unique_resources": data.activity.unique_resources,
+            "records_accessed": data.activity.records_accessed,
+            "download_volume_mb": data.activity.download_volume_mb,
+            "authorization_failures": data.activity.authorization_failures,
+            "cross_domain_access": data.activity.cross_domain_access,
+        }.items() if value is not None
     }
 
-    has_activity_telemetry = any([
-    	data.activity.requests_per_minute > 0,
-    	data.activity.unique_resources > 0,
-    	data.activity.records_accessed > 0,
-    	data.activity.download_volume_mb > 0,
-    	data.activity.authorization_failures > 0,
-    	data.activity.cross_domain_access > 0,
-     ])
+    # The current ML model expects a complete feature vector. Partial telemetry
+    # must not be silently padded with invented zeroes.
+    has_activity_telemetry = bool(ml_features) and all(
+        value is not None for value in [
+            data.activity.requests_per_minute,
+            data.activity.unique_resources,
+            data.activity.records_accessed,
+            data.activity.download_volume_mb,
+            data.activity.authorization_failures,
+            data.activity.cross_domain_access,
+        ]
+    )
 
     if has_activity_telemetry:
     	ml_analysis = behaviour_analysis_service.analyze_ml(ml_features)
@@ -204,7 +217,7 @@ def analyze_behaviour(data: AnalyzeRequest):
            },
      	}
 
-    anomaly_score = min(1.0, sum(score_components))
+    anomaly_score = min(1.0, sum(score_by_signal.values()))
 
     if anomaly_score >= 0.85:
         risk_level = "CRITICAL"

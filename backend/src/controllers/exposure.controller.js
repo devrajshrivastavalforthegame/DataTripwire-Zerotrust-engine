@@ -1,4 +1,4 @@
-﻿import { query } from "../config/database.js";
+import { query } from "../config/database.js";
 
 const windows = {
   today: "24 hours",
@@ -28,7 +28,12 @@ export function calculateExposureRisk(rows = []) {
     ...r,
     classification: String(r.classification || "INTERNAL").toUpperCase(),
     action: String(r.action || "VIEW").toUpperCase(),
-    bytes_transferred: Number(r.bytes_transferred || 0),
+    bytes_transferred:
+      r.bytes_transferred === null || r.bytes_transferred === undefined || r.bytes_transferred === ""
+        ? null
+        : Number.isFinite(Number(r.bytes_transferred)) && Number(r.bytes_transferred) >= 0
+          ? Number(r.bytes_transferred)
+          : null,
   }));
 
   const weighted = events.reduce(
@@ -40,13 +45,18 @@ export function calculateExposureRisk(rows = []) {
     (e) => !["PUBLIC", "INTERNAL"].includes(e.classification)
   );
   const exports = events.filter((e) => actions.has(e.action));
-  const bytes = events.reduce((sum, e) => sum + e.bytes_transferred, 0);
-  const sensitiveBytes = sensitive.reduce(
-    (sum, e) => sum + e.bytes_transferred,
-    0
-  );
+  const measuredBytes = events.filter((e) => e.bytes_transferred !== null);
+  const measuredSensitiveBytes = sensitive.filter((e) => e.bytes_transferred !== null);
+  const bytesValue = measuredBytes.reduce((sum, e) => sum + e.bytes_transferred, 0);
+  const sensitiveBytesValue = measuredSensitiveBytes.reduce((sum, e) => sum + e.bytes_transferred, 0);
+  // Null means transfer volume has not been measured; it must not be presented as zero.
+  const bytes = measuredBytes.length ? bytesValue : null;
+  const sensitiveBytes = measuredSensitiveBytes.length ? sensitiveBytesValue : null;
 
   const departments = new Set(events.map((e) => e.department).filter(Boolean));
+  const criticalEvents = events.filter((e) => e.classification === "CRITICAL");
+  const measuredSensitiveEvents = measuredSensitiveBytes.length;
+  const unmeasuredSensitiveEvents = sensitive.length - measuredSensitiveEvents;
   const resources = new Set(events.map((e) => e.resource_id).filter(Boolean));
   const bulk = events.filter((e) => e.action === "BULK_DOWNLOAD").length;
   const exportCount = exports.length;
@@ -56,7 +66,7 @@ export function calculateExposureRisk(rows = []) {
     Math.round(
       weighted * 4 +
         sensitive.length * 3 +
-        Math.min(25, bytes / (1024 * 1024)) +
+        Math.min(25, bytesValue / (1024 * 1024)) +
         Math.min(20, departments.size * 5)
     )
   );
@@ -67,8 +77,8 @@ export function calculateExposureRisk(rows = []) {
       exportCount * 8 +
         bulk * 18 +
         Math.min(30, sensitive.length * 2) +
-        (sensitiveBytes > 0
-          ? Math.min(25, sensitiveBytes / (1024 * 1024))
+        (sensitiveBytesValue > 0
+          ? Math.min(25, sensitiveBytesValue / (1024 * 1024))
           : 0) +
         Math.min(15, Math.max(0, departments.size - 1) * 8)
     )
@@ -78,8 +88,13 @@ export function calculateExposureRisk(rows = []) {
 
   return {
     eventCount: events.length,
-    sensitiveFiles: sensitive.length,
-    criticalFiles: events.filter((e) => e.classification === "CRITICAL").length,
+    // These are event counts, not unique file counts: one resource can be accessed repeatedly.
+    sensitiveEvents: sensitive.length,
+    criticalEvents: criticalEvents.length,
+    measuredByteEvents: measuredBytes.length,
+    unmeasuredByteEvents: events.length - measuredBytes.length,
+    measuredSensitiveByteEvents: measuredSensitiveEvents,
+    unmeasuredSensitiveByteEvents: unmeasuredSensitiveEvents,
     downloads: events.filter((e) =>
       ["DOWNLOAD", "BULK_DOWNLOAD"].includes(e.action)
     ).length,
@@ -104,10 +119,13 @@ export function calculateExposureRisk(rows = []) {
 
 export async function getExposure(req, res) {
   try {
-    const userId =
-      req.auth.portal === "employee"
-        ? req.auth.user.id
-        : req.query.userId || null;
+    // This route is mounted behind the admin portal and audit:read permission.
+    // Validate UUID input before it reaches PostgreSQL's ::uuid cast.
+    const requestedUserId = req.query.userId;
+    if (requestedUserId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(requestedUserId))) {
+      return res.status(400).json({ error: "userId must be a valid UUID", code: "INVALID_USER_ID" });
+    }
+    const userId = requestedUserId || null;
 
     const results = await Promise.all(
       Object.entries(windows).map(async ([key, interval]) => {
@@ -148,7 +166,7 @@ export async function getExposure(req, res) {
       },
       notes: {
         volume:
-          "bytes_transferred is reported only where the application has an actual measured value; otherwise volume remains zero and is not inferred from file size.",
+          "totalBytes and sensitiveBytes are null when transfer volume has not been measured; volume is never inferred from file size.",
         model:
           "DER/ER/DBR are deterministic prototype indicators, not a calibrated production model.",
       },

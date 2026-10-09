@@ -263,6 +263,105 @@
           "SOC & Monitoring"
         ]
       }
+    },
+    "/api/v1/security/data-exposure": {
+      "get": {
+        "summary": "Report per-user sensitive-data exposure risk",
+        "description": "Read-only report for users with logged RESOURCE_ACCESS events matching resources classified CONFIDENTIAL or RESTRICTED in the selected current or preceding equal-length window. Scores are explainable heuristics based on logged events; byte volume and local-device/USB activity are not captured. The separate behavior-event pipeline also uses the per-user exposure assessment during deterministic risk fusion.",
+        "operationId": "getDataExposureReport",
+        "tags": [
+          "SOC & Monitoring"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "window",
+            "in": "query",
+            "required": false,
+            "description": "Length of the current window; the report compares it with the preceding equal-length window.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "24h",
+                "7d",
+                "30d"
+              ],
+              "default": "7d"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Maximum number of users returned.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Per-user data-exposure report. Users without matching catalogue-backed events in either compared window are omitted; an empty result is represented by count 0 and users [].",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataExposureReport"
+                },
+                "example": {
+                  "generated_at": "2026-10-10T00:00:00.000Z",
+                  "window": {
+                    "hours": 168,
+                    "key": "7d",
+                    "comparison": "current window versus preceding equal-length window"
+                  },
+                  "count": 0,
+                  "classification_source": "resources.sensitivity",
+                  "telemetry_note": "Only events matched to a resource in the trusted resources catalogue with CONFIDENTIAL or RESTRICTED sensitivity are included. Data-transfer byte volume is not captured by this report; recorded_bytes is null and must not be interpreted as zero.",
+                  "risk_note": "This read-only report uses an explainable heuristic, not a trained ML probability. The separate behavior-event pipeline reuses the per-user exposure assessment during deterministic risk fusion; this endpoint itself does not enforce policy.",
+                  "users": []
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid window or limit.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "allowedValues": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required or token/session invalid."
+          },
+          "403": {
+            "description": "Authenticated user lacks the users:read permission."
+          },
+          "500": {
+            "description": "Unable to load report."
+          }
+        }
+      }
     }
   },
   "components": {
@@ -271,6 +370,243 @@
         "type": "http",
         "scheme": "bearer",
         "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "DataExposureReport": {
+        "type": "object",
+        "required": [
+          "generated_at",
+          "window",
+          "count",
+          "classification_source",
+          "telemetry_note",
+          "risk_note",
+          "users"
+        ],
+        "properties": {
+          "generated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "window": {
+            "$ref": "#/components/schemas/DataExposureWindow"
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "classification_source": {
+            "type": "string",
+            "enum": [
+              "resources.sensitivity"
+            ]
+          },
+          "telemetry_note": {
+            "type": "string"
+          },
+          "risk_note": {
+            "type": "string"
+          },
+          "users": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DataExposureUser"
+            }
+          }
+        }
+      },
+      "DataExposureWindow": {
+        "type": "object",
+        "required": [
+          "hours",
+          "key",
+          "comparison"
+        ],
+        "properties": {
+          "hours": {
+            "type": "integer",
+            "enum": [
+              24,
+              168,
+              720
+            ]
+          },
+          "key": {
+            "type": "string",
+            "enum": [
+              "24h",
+              "7d",
+              "30d"
+            ]
+          },
+          "comparison": {
+            "type": "string"
+          }
+        }
+      },
+      "DataExposureUser": {
+        "type": "object",
+        "required": [
+          "user_id",
+          "username",
+          "role",
+          "current",
+          "previous",
+          "trend",
+          "last_event_at"
+        ],
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "username": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "current": {
+            "$ref": "#/components/schemas/DataExposureAssessment"
+          },
+          "previous": {
+            "$ref": "#/components/schemas/DataExposureAssessment"
+          },
+          "trend": {
+            "$ref": "#/components/schemas/DataExposureTrend"
+          },
+          "last_event_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        }
+      },
+      "DataExposureAssessment": {
+        "type": "object",
+        "required": [
+          "metrics",
+          "data_exposure_risk",
+          "severity",
+          "factors"
+        ],
+        "properties": {
+          "metrics": {
+            "$ref": "#/components/schemas/DataExposureMetrics"
+          },
+          "data_exposure_risk": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "LOW",
+              "MEDIUM",
+              "HIGH",
+              "CRITICAL"
+            ]
+          },
+          "factors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DataExposureFactor"
+            }
+          }
+        }
+      },
+      "DataExposureMetrics": {
+        "type": "object",
+        "required": [
+          "sensitive_access_count",
+          "sensitive_download_count",
+          "sensitive_copy_count",
+          "sensitive_export_count",
+          "sensitive_bulk_download_count",
+          "unique_sensitive_resources",
+          "recorded_bytes",
+          "byte_volume_status"
+        ],
+        "properties": {
+          "sensitive_access_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "sensitive_download_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "sensitive_copy_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "sensitive_export_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "sensitive_bulk_download_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "unique_sensitive_resources": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "recorded_bytes": {
+            "type": "integer",
+            "nullable": true,
+            "description": "Always null in this version because byte-volume telemetry is not captured."
+          },
+          "byte_volume_status": {
+            "type": "string",
+            "enum": [
+              "NOT_CAPTURED"
+            ]
+          }
+        }
+      },
+      "DataExposureFactor": {
+        "type": "object",
+        "required": [
+          "code",
+          "points",
+          "detail"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "points": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "detail": {
+            "type": "string"
+          }
+        }
+      },
+      "DataExposureTrend": {
+        "type": "object",
+        "required": [
+          "direction",
+          "activity_signal_delta"
+        ],
+        "properties": {
+          "direction": {
+            "type": "string",
+            "enum": [
+              "NO_ACTIVITY",
+              "RISING",
+              "DECLINING",
+              "STABLE"
+            ]
+          },
+          "activity_signal_delta": {
+            "type": "integer"
+          }
+        }
       }
     }
   },

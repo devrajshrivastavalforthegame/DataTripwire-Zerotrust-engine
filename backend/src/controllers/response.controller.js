@@ -99,6 +99,15 @@ export async function manageSessionResponse(req, res, forcedAction = null) {
             return res.status(404).json({ error: "Session not found" });
         }
 
+        // Separation of duties: an operator cannot change their own session state.
+        if (String(session.user_id) === String(req.auth.user.id)) {
+            await client.query("ROLLBACK");
+            return res.status(403).json({
+                error: "Operators cannot apply session responses to their own account",
+                code: "SELF_SESSION_RESPONSE_FORBIDDEN"
+            });
+        }
+
         if (session.status === "ended") {
             await client.query("ROLLBACK");
             return res.status(409).json({ error: "Ended sessions cannot be modified" });

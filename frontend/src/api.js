@@ -29,6 +29,7 @@ export const api={
     return {...body,user};
   },
   me:()=>request(API_BASE_URL+"/api/v1/auth/me"),
+  stepUp:(password)=>request(API_BASE_URL+"/api/v1/auth/step-up",{method:"POST",body:JSON.stringify({password})}),
   logout:()=>{localStorage.removeItem(AUTH_KEY);localStorage.removeItem("datatripwire.user.v1")},
   resources:()=>request(API_BASE_URL+"/api/v1/resources"),
   accessResource:(id,payload)=>request(API_BASE_URL+"/api/v1/resources/"+id+"/access",{method:"POST",body:JSON.stringify(payload)}),

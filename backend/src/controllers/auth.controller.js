@@ -25,7 +25,7 @@ export async function loginController(req, res) {
         });
         res.json(result);
     } catch (error) {
-        const status = error.message === "Invalid credentials" ? 401 : error.code === "PORTAL_MISMATCH" || error.code === "PORTAL_NOT_ALLOWED" ? 403 : 500;
+        const status = error.message === "Invalid credentials" ? 401 : error.message === "User account is not active" || error.code === "PORTAL_MISMATCH" || error.code === "PORTAL_NOT_ALLOWED" ? 403 : 500;
         res.status(status).json({ error: error.message, ...(error.code ? { code: error.code } : {}) });
     }
 }

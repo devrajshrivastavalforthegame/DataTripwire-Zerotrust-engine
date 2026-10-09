@@ -105,10 +105,5 @@ export const api={
   createCalendarEvent:(payload)=>request(API_BASE_URL+"/api/v1/workspace/calendar/events",{method:"POST",body:JSON.stringify(payload)}),
   updateProfile:(payload)=>request(API_BASE_URL+"/api/v1/workspace/profile",{method:"PUT",body:JSON.stringify(payload)}),
   updateWorkspaceSettings:(payload)=>request(API_BASE_URL+"/api/v1/workspace/settings",{method:"PUT",body:JSON.stringify(payload)}),
-  analyzeBehaviour:(payload)=>{
-    if (IS_PRODUCTION && !AI_SERVICE_URL) {
-      throw new Error("Direct browser access to the AI service is disabled in production. Route AI analysis through the authenticated backend.");
-    }
-    return request(AI_SERVICE_URL+"/api/v1/analyze",{method:"POST",body:JSON.stringify(payload)});
-  }
+  analyzeBehaviour:(payload)=>request(API_BASE_URL+"/api/v1/security/copilot/analyze",{method:"POST",body:JSON.stringify(payload)})
 };

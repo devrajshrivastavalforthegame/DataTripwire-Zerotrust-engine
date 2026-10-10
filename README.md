@@ -9,7 +9,7 @@
 *Keep checking users after login, not just once.*
 
 
-**Presented by Team YOKAI · Prestige Institute of Engineering Management and Research (PIEMR), Indore**
+**Presented by Team YOKAI · AGNITIA 2026 · Prestige Institute of Engineering and Management and Research, Indore**
 
 </div>
 

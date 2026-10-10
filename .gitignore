@@ -32,3 +32,16 @@ Thumbs.db
 
 # Local backups
 backups/
+# Local environment and credential variants
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# Generated release/demo artifacts
+*.zip
+*.tar
+*.tar.gz
+*.dump
+*.sql.gz

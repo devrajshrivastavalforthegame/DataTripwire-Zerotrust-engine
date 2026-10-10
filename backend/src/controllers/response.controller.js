@@ -99,6 +99,11 @@ export async function manageSessionResponse(req, res, forcedAction = null) {
             return res.status(404).json({ error: "Session not found" });
         }
 
+        if (session.user_id === req.auth?.user?.id) {
+            await client.query("ROLLBACK");
+            return res.status(403).json({ error: "Operators cannot modify their own sessions", code: "SELF_SESSION_RESPONSE_FORBIDDEN" });
+        }
+
         if (session.status === "ended") {
             await client.query("ROLLBACK");
             return res.status(409).json({ error: "Ended sessions cannot be modified" });

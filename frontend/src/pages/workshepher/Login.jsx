@@ -14,6 +14,7 @@ export default function Login() {
   const navigate = useNavigate();
   const [email,setEmail] = useState("");
   const [password,setPassword] = useState("");
+  const [portal,setPortal] = useState("employee");
   const [error,setError] = useState("");
   const [notice,setNotice] = useState("");
   const [loading,setLoading] = useState(false);
@@ -71,11 +72,35 @@ export default function Login() {
             onSubmit={async (event) => {
               event.preventDefault();
               setError(""); setLoading(true);
-              try { const result=await api.login({email,password}); navigate(result.user.roles.some(r=>r.includes("Security"))?"/security":"/"); }
+              try { await api.login({email,password,portal}); navigate(portal==="admin"?"/security":"/"); }
               catch (e) { setError(e.message || "Unable to sign in."); }
               finally { setLoading(false); }
             }}
           >
+            <div className="ws-portal-field">
+              <span className="ws-portal-field-label">APPLICATION PORTAL</span>
+              <div className="ws-portal-choice" role="group" aria-label="Select application portal">
+                <button
+                  type="button"
+                  className={portal === "employee" ? "active" : ""}
+                  aria-pressed={portal === "employee"}
+                  onClick={() => { setPortal("employee"); setError(""); }}
+                >
+                  <strong>WorkShepher</strong>
+                  <span>Employee / Manager</span>
+                </button>
+                <button
+                  type="button"
+                  className={portal === "admin" ? "active" : ""}
+                  aria-pressed={portal === "admin"}
+                  onClick={() => { setPortal("admin"); setError(""); }}
+                >
+                  <strong>DataTripwire</strong>
+                  <span>Security Operations</span>
+                </button>
+              </div>
+              <p className="ws-portal-hint">Your account role determines which portal you can enter.</p>
+            </div>
             <label>
               Work email
               <input

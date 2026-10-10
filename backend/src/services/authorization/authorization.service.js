@@ -104,21 +104,24 @@ export async function hasResponsibility(
   responsibility,
   requiredScope = null
 ) {
-  if (!responsibility) {
-    return false;
-  }
+  if (!responsibility) return false;
+
+  // A broader grant includes narrower scopes, never the reverse.
+  const scopeGrants = {
+    OWN: ["OWN"],
+    ASSIGNED: ["OWN", "ASSIGNED"],
+    TEAM: ["OWN", "ASSIGNED", "TEAM"],
+    ORGANIZATION: ["OWN", "ASSIGNED", "TEAM", "ORGANIZATION"]
+  };
 
   const values = [userId, responsibility];
   let scopeClause = "";
 
-  if (requiredScope) {
-    values.push(requiredScope);
-    scopeClause = `
-      AND (
-        ur.scope = $3
-        OR ur.scope = 'ORGANIZATION'
-      )
-    `;
+  if (requiredScope !== null && requiredScope !== undefined) {
+    const acceptedGrantScopes = scopeGrants[String(requiredScope).trim().toUpperCase()];
+    if (!acceptedGrantScopes) return false;
+    values.push(acceptedGrantScopes);
+    scopeClause = "AND ur.scope = ANY($3::text[])";
   }
 
   const result = await pool.query(

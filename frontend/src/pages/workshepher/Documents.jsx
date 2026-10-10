@@ -26,9 +26,10 @@ export default function Documents() {
       const response=await api.accessResource(doc.id,{action});
       setResult(response);
       setMessage(response.allowed ? `Access allowed — risk ${response.risk?.score ?? 0}/100` : `Access blocked by continuous trust policy — risk ${response.risk?.score ?? 0}/100`);
-    }catch(e){setMessage(e.status===403?"This action is temporarily unavailable for your current session.":"We could not complete that action. Please try again.");setResult(e.body||e);}
+    }catch(e){setMessage(e.body?.error||(e.status===403?"This action is unavailable for your current session.":"We could not complete that action. Please try again."));setResult(e.body||e);}
     finally{setBusy("");}
   }
+
 
   return <div className="ws-page">
     <PageHeading eyebrow="WORKSPACE" title="Documents" description="Your organization's protected documents and resources." />
@@ -53,5 +54,6 @@ export default function Documents() {
         </motion.div>)}
       </div>
     </section>
+
   </div>;
 }

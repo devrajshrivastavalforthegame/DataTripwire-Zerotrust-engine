@@ -17,9 +17,26 @@ import { ensureDemoUsers } from "./services/demo-seed.service.js";
 const app = express();
 app.disable("x-powered-by");
 app.use(helmet());
-app.use(cors({origin:true,credentials:true}));
+const allowedOrigins = new Set(
+  (process.env.CORS_ORIGINS ??
+    (process.env.NODE_ENV === "production"
+      ? ""
+      : "http://localhost:5173,http://127.0.0.1:5173"))
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean)
+);
+
+app.use(cors({
+  origin(origin, callback) {
+    // Permit non-browser clients and same-origin requests without an Origin header.
+    if (!origin || allowedOrigins.has(origin)) return callback(null, true);
+    return callback(null, false);
+  },
+  credentials: true
+}));
 app.use(express.json({limit:"1mb"}));
-app.use(rateLimit({windowMs:15*60*1000,max:300,standardHeaders:true,legacyHeaders:false}));
+app.use(rateLimit({windowMs:15*60*1000,max:600,standardHeaders:true,legacyHeaders:false}));
 app.get("/health",(_,res)=>res.json({status:"ok",service:"datatripwire-backend"}));
 app.get("/health/db",async(_,res)=>{try{await checkDatabaseConnection();res.json({status:"ok",database:true});}catch{res.status(503).json({status:"error",database:false});}});
 app.use("/api/v1/auth",authRoutes);
@@ -33,6 +50,19 @@ app.use((err,_req,res,_next)=>{console.error("Unhandled backend error",err);res.
 const port=process.env.BACKEND_PORT||3000;
 app.listen(port,async()=>{
   console.log(`DataTripwire backend running on port ${port}`);
-  try { await seedDemoResources(); await ensureDemoUsers(); console.log("Demo security resources/users ready."); }
-  catch (error) { console.error("Demo bootstrap failed:",error); }
+  const isProduction = String(process.env.NODE_ENV || "").toLowerCase() === "production";
+  const demoSeedEnabled = process.env.ENABLE_DEMO_SEED === "true";
+
+  if (isProduction || !demoSeedEnabled) {
+    console.log("Demo bootstrap skipped (production or ENABLE_DEMO_SEED is not explicitly true).");
+    return;
+  }
+
+  try {
+    await seedDemoResources();
+    await ensureDemoUsers();
+    console.log("Demo security resources/users ready.");
+  } catch (error) {
+    console.error("Demo bootstrap failed:",error);
+  }
 });

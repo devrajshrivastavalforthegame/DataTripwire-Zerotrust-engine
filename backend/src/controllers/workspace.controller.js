@@ -70,9 +70,48 @@ async function save(userId,data){await query("UPDATE workspace_states SET data=$
 export async function getState(req,res){res.json({data:await ensureState(req.auth.user.id)});}
 
 export async function updateState(req,res){
-  const current=await ensureState(req.auth.user.id);
-  const next={...current,...(req.body?.data||{})};
-  res.json({data:await save(req.auth.user.id,next)});
+  const data = req.body?.data;
+  if (!data || typeof data !== "object" || Array.isArray(data)) {
+    return res.status(400).json({ error: "data must be an object containing profile and/or settings" });
+  }
+
+  const allowedKeys = new Set(["profile", "settings"]);
+  const unexpectedKeys = Object.keys(data).filter(key => !allowedKeys.has(key));
+  if (unexpectedKeys.length) {
+    return res.status(400).json({
+      error: "Workspace collections must be changed through their dedicated endpoints",
+      blockedFields: unexpectedKeys
+    });
+  }
+
+  const current = await ensureState(req.auth.user.id);
+  const next = { ...current };
+
+  if (data.profile !== undefined) {
+    if (!data.profile || typeof data.profile !== "object" || Array.isArray(data.profile)) {
+      return res.status(400).json({ error: "profile must be an object" });
+    }
+    const profileFields = ["display_name", "job_title", "location"];
+    const invalid = Object.keys(data.profile).filter(key => !profileFields.includes(key));
+    if (invalid.length || Object.values(data.profile).some(value => typeof value !== "string" || value.length > 160)) {
+      return res.status(400).json({ error: "profile contains unsupported fields or invalid values" });
+    }
+    next.profile = { ...current.profile, ...data.profile };
+  }
+
+  if (data.settings !== undefined) {
+    if (!data.settings || typeof data.settings !== "object" || Array.isArray(data.settings)) {
+      return res.status(400).json({ error: "settings must be an object" });
+    }
+    const settingsFields = ["notifications", "mentions", "project_updates", "weekly_summary"];
+    const invalid = Object.keys(data.settings).filter(key => !settingsFields.includes(key));
+    if (invalid.length || Object.values(data.settings).some(value => typeof value !== "boolean")) {
+      return res.status(400).json({ error: "settings contains unsupported fields or invalid values" });
+    }
+    next.settings = { ...current.settings, ...data.settings };
+  }
+
+  return res.json({ data: await save(req.auth.user.id, next) });
 }
 
 export async function workspaceAction(req,res){

@@ -6,7 +6,7 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "jest --runInBand",
+    "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --runInBand",
     "dev": "nodemon src/app.js",
     "start": "node src/app.js",
     "backup": "node src/scripts/backup.js"
@@ -25,7 +25,8 @@
     "jsonwebtoken": "^9.0.3",
     "pg": "^8.23.1",
     "swagger-ui-express": "^5.0.1",
-    "yamljs": "^0.3.0"
+    "yamljs": "^0.3.0",
+    "nodemailer": "^7.0.6"
   },
   "devDependencies": {
     "jest": "^30.5.2",

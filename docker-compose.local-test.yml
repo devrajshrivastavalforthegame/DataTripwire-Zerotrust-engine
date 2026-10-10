@@ -1,0 +1,19 @@
+
+services:
+  postgres:
+    container_name: datatripwire-test-postgres
+
+  backend:
+    container_name: datatripwire-test-backend
+    environment:
+      BACKEND_PORT: "3000"
+
+  ai-service:
+    container_name: datatripwire-test-ai
+
+  frontend:
+    container_name: datatripwire-test-frontend
+
+volumes:
+  datatripwire-postgres-data:
+    name: datatripwire-test-postgres-data

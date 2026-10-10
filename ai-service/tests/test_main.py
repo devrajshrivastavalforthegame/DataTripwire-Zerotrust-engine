@@ -197,3 +197,62 @@ def test_anomaly_with_real_telemetry():
     assert analysis["ml"]["is_anomaly"] is True
     assert analysis["ml"]["anomaly_score"] > 0.8
     assert analysis["baseline_deviation"]["severity"] == "CRITICAL"
+
+
+
+def test_missing_telemetry_is_not_coerced_to_zero():
+    payload = {
+        "user_id": "demo-user-001",
+        "risk_score": 10,
+        "decision": "ALLOW",
+        "reasons": [],
+    }
+    response = client.post("/api/v1/analyze", json=payload)
+    assert response.status_code == 200
+    analysis = response.json()["analysis"]
+    assert analysis["ml"]["severity"] == "UNAVAILABLE"
+    assert analysis["ml"]["model"] == "isolation_forest_not_run"
+
+
+def test_same_reason_and_context_signal_is_scored_once():
+    payload = {
+        "user_id": "demo-user-001",
+        "reasons": ["new_device"],
+        "device": {"is_new": True},
+        "activity": {
+            "requests_per_minute": 1,
+            "unique_resources": 1,
+            "records_accessed": 1,
+            "download_volume_mb": 1,
+            "authorization_failures": 0,
+            "cross_domain_access": 0,
+        },
+    }
+    response = client.post("/api/v1/analyze", json=payload)
+    assert response.status_code == 200
+    analysis = response.json()["analysis"]
+    assert analysis["signals"].count("new_device") == 1
+    assert analysis["anomaly_score"] == 0.1
+
+
+def test_partial_telemetry_does_not_run_ml_model():
+    payload = {
+        "user_id": "demo-user-001",
+        "activity": {"requests_per_minute": 12},
+    }
+    response = client.post("/api/v1/analyze", json=payload)
+    assert response.status_code == 200
+    analysis = response.json()["analysis"]
+    assert analysis["ml"]["severity"] == "UNAVAILABLE"
+
+
+
+def test_ai_cors_does_not_reflect_untrusted_origin():
+    response = client.options(
+        "/api/v1/analyze",
+        headers={
+            "Origin": "https://attacker.invalid",
+            "Access-Control-Request-Method": "POST",
+        },
+    )
+    assert "access-control-allow-origin" not in response.headers

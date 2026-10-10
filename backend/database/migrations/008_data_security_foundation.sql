@@ -1,0 +1,51 @@
+BEGIN;
+
+-- Fail before replacing the constraint if legacy rows contain values this
+-- migration cannot preserve. Transaction rollback leaves the old constraint intact.
+DO $migration_preflight$
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM resources
+        WHERE sensitivity IS NULL
+           OR sensitivity NOT IN ('PUBLIC','INTERNAL','CONFIDENTIAL','RESTRICTED','CRITICAL')
+    ) THEN
+        RAISE EXCEPTION
+            'Migration 008 stopped: resources.sensitivity contains NULL or unsupported values. Review and explicitly remediate those rows before retrying.';
+    END IF;
+END
+$migration_preflight$;
+
+ALTER TABLE resources DROP CONSTRAINT IF EXISTS chk_resource_sensitivity;
+ALTER TABLE resources ADD CONSTRAINT chk_resource_sensitivity
+CHECK (sensitivity IN ('PUBLIC','INTERNAL','CONFIDENTIAL','RESTRICTED','CRITICAL'));
+
+CREATE TABLE IF NOT EXISTS data_access_events (
+    id BIGSERIAL PRIMARY KEY,
+    user_id UUID,
+    session_id UUID,
+    resource_id UUID,
+    action VARCHAR(32) NOT NULL CHECK (
+        action IN ('VIEW','DOWNLOAD','EXPORT','BULK_DOWNLOAD','SHARE','API_EXPORT','COPY')
+    ),
+    classification VARCHAR(16) NOT NULL CHECK (
+        classification IN ('PUBLIC','INTERNAL','CONFIDENTIAL','RESTRICTED','CRITICAL')
+    ),
+    bytes_transferred BIGINT,
+    department VARCHAR(128),
+    destination TEXT,
+    source_ip INET,
+    metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_data_access_user_time
+    ON data_access_events (user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_data_access_resource_time
+    ON data_access_events (resource_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_data_access_classification_time
+    ON data_access_events (classification, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_data_access_action_time
+    ON data_access_events (action, created_at DESC);
+
+COMMIT;

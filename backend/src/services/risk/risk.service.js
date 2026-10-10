@@ -24,7 +24,14 @@ function inHourRange(hour, start, end) {
     return start <= end ? hour >= start && hour <= end : hour >= start || hour <= end;
 }
 
-export function calculateScores({ event, baseline, previousScore = 0, isDecoy = false }) {
+export function calculateScores({
+  event,
+  baseline,
+  previousScore = 0,
+  isDecoy = false,
+  additionalFactors = [],
+  previousFactors = []
+}) {
     const factors = [];
     let increase = 0;
     const knownDevices = Array.isArray(baseline?.known_devices) ? baseline.known_devices : [];
@@ -43,7 +50,31 @@ export function calculateScores({ event, baseline, previousScore = 0, isDecoy = 
     if (event.scope && event.scope !== "assigned" && event.scope !== "own") add("scope_violation", RISK_POINTS.scopeViolation, "Action scope is outside the normal assignment.");
     if (isDecoy) add("decoy_access", RISK_POINTS.decoyAccess, "Controlled deception resource was accessed.");
 
-    const newScore = Math.min(100, Math.max(0, increase ? Number(previousScore) + increase : Number(previousScore) - 5));
+    for (const factor of additionalFactors) {
+    const points = Number(factor.points);
+
+    if (
+        typeof factor.type === "string" &&
+        typeof factor.detail === "string" &&
+        Number.isFinite(points) &&
+        points > 0
+    ) {
+        add(factor.type, points, factor.detail);
+      }
+    }
+
+    const previousFactorTypes = new Set(
+        (Array.isArray(previousFactors) ? previousFactors : [])
+            .map((factor) => typeof factor === "string" ? factor : factor?.type)
+            .filter((type) => typeof type === "string")
+    );
+    const newIncrease = factors
+        .filter((factor) => !previousFactorTypes.has(factor.type))
+        .reduce((sum, factor) => sum + factor.points, 0);
+    const newScore = Math.min(
+        100,
+        Math.max(0, newIncrease ? Number(previousScore) + newIncrease : Number(previousScore) - 5)
+    );
     const ats = Math.min(100, Math.max(0, factors.reduce((sum, f) => sum + f.points, 0) + (isDecoy ? 25 : 0)));
     const sts = Math.max(0, 100 - newScore);
     return {
@@ -57,12 +88,27 @@ export function calculateScores({ event, baseline, previousScore = 0, isDecoy = 
     };
 }
 
-export async function evaluateAndSave({ userId, sessionId, event, isDecoy = false }) {
+export async function evaluateAndSave({
+    userId,
+    sessionId,
+    event,
+    isDecoy = false,
+    additionalFactors = []
+}) {
     const baselineResult = await query(`SELECT * FROM user_baselines WHERE user_id=$1`, [userId]);
     const baseline = baselineResult.rows[0] ?? null;
-    const previousResult = await query(`SELECT risk_score, sts_score FROM risk_decisions WHERE session_id=$1 ORDER BY created_at DESC LIMIT 1`, [sessionId]);
+    const previousResult = await query(`SELECT risk_score, sts_score, risk_factors FROM risk_decisions WHERE session_id=$1 ORDER BY created_at DESC LIMIT 1`, [sessionId]);
     const previousScore = Number(previousResult.rows[0]?.risk_score ?? 0);
-    const result = calculateScores({ event, baseline, previousScore, isDecoy });
+    const previousFactors = previousResult.rows[0]?.risk_factors ?? [];
+    const result = calculateScores({
+        event,
+        baseline,
+        previousScore,
+        isDecoy,
+        additionalFactors,
+        previousFactors
+    });
+
     const saved = await query(`
         INSERT INTO risk_decisions
         (user_id,session_id,behavior_event_id,risk_score,decision,reasons,ai_assessment,previous_score,sts_score,ats_score,explanation,policy_id,risk_factors)

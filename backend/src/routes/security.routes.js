@@ -1,14 +1,16 @@
 import { Router } from "express";
-import { authenticate, requireActiveSession } from "../middleware/auth.middleware.js";
+import rateLimit from "express-rate-limit";
+import { authenticate, requireActiveSession, requirePortal } from "../middleware/auth.middleware.js";
 import { behaviorController } from "../controllers/behavior.controller.js";
+import { analyzeCopilotRequest } from "../controllers/copilot.controller.js";
 import { rebuildBaseline, getBaseline } from "../controllers/baseline.controller.js";
 import { decoyController } from "../controllers/deception.controller.js";
 import { listSessions, sessionTimeline, listAudit } from "../controllers/security.controller.js";
 import { getOverview } from "../controllers/overview.controller.js";
 import { listActivity } from "../controllers/activity.controller.js";
 import { listUsersRisk } from "../controllers/users-risk.controller.js";
-import { listResources } from "../controllers/resources.controller.js";
-import { listIncidents } from "../controllers/incidents.controller.js";
+import { listResources, updateSecurityResource } from "../controllers/resources.controller.js";
+import { listIncidents, resolveIncident } from "../controllers/incidents.controller.js";
 import {
     getPolicies,
     getAdaptiveResponses,
@@ -18,127 +20,36 @@ import {
 } from "../controllers/response.controller.js";
 import { requirePermission } from "../middleware/authorization.middleware.js";
 import { requireProtectedAction } from "../middleware/policy.middleware.js";
+import { getExposure } from "../controllers/exposure.controller.js";
 
 const router = Router();
+const copilotLimiter = rateLimit({ windowMs: 60 * 1000, max: 30, standardHeaders: true, legacyHeaders: false });
+router.use(authenticate, requirePortal("admin"));
 
-router.post(
-    "/events",
-    authenticate,
-    requireActiveSession,
-    behaviorController
-);
+// AI analysis is advisory and available only to authenticated, active admin sessions.
+router.post("/copilot/analyze", copilotLimiter, requireActiveSession, requirePermission("overview", "read"), analyzeCopilotRequest);
 
-router.get(
-    "/overview",
-    authenticate,
-    requirePermission("overview", "read"),
-    getOverview
-);
+// Data-exposure analytics are admin-only and require audit-read permission.
+router.get("/data-exposure", requirePermission("audit", "read"), getExposure);
 
-router.get(
-    "/incidents",
-    authenticate,
-    requirePermission("incidents", "read"),
-    listIncidents
-);
-router.get(
-    "/resources",
-    authenticate,
-    requirePermission("resources", "read"),
-    listResources
-);
-router.get(
-    "/users-risk",
-    authenticate,
-    requirePermission("users", "read"),
-    listUsersRisk
-);
-router.get(
-    "/activity",
-    authenticate,
-    requirePermission("audit", "read"),
-    listActivity
-);
-
-router.post(
-    "/baseline/rebuild",
-    authenticate,
-    requirePermission("baseline", "manage"),
-    requireProtectedAction,
-    requireActiveSession,
-    rebuildBaseline
-);
-
-router.get(
-    "/baseline",
-    authenticate,
-    requirePermission("baseline", "read"),
-    getBaseline
-);
-
-router.get(
-    "/sessions",
-    authenticate,
-    requirePermission("sessions", "read"),
-    listSessions
-);
-
-router.get(
-    "/sessions/:sessionId/timeline",
-    authenticate,
-    requirePermission("sessions", "read"),
-    sessionTimeline
-);
-
-router.get(
-    "/audit",
-    authenticate,
-    requirePermission("audit", "read"),
-    listAudit
-);
-
-router.get(
-    "/finance/archive/backup",
-    authenticate,
-    requirePermission("deception", "trigger"),
-    requireProtectedAction,
-    requireActiveSession,
-    decoyController
-);
-
-router.get(
-    "/policies",
-    authenticate,
-    requirePermission("policies", "read"),
-    getPolicies
-);
-
-router.get(
-    "/responses",
-    authenticate,
-    requirePermission("response", "read"),
-    getAdaptiveResponses
-);
-
-router.post(
-    "/sessions/:sessionId/restrict",
-    authenticate,
-    requirePermission("sessions", "restrict"),
-    restrictSession
-);
-
-router.post(
-    "/sessions/:sessionId/quarantine",
-    authenticate,
-    requirePermission("sessions", "quarantine"),
-    quarantineSession
-);
-
-router.post(
-    "/sessions/:sessionId/release",
-    authenticate,
-    requirePermission("sessions", "release"),
-    releaseSession
-);
+router.post("/events", requireActiveSession, behaviorController);
+router.get("/overview", requirePermission("overview", "read"), getOverview);
+router.get("/incidents", requirePermission("incidents", "read"), listIncidents);
+router.post("/incidents/:id/resolve", requireActiveSession, requirePermission("incidents", "resolve"), requireProtectedAction, resolveIncident);
+router.get("/resources", requirePermission("resources", "read"), listResources);
+router.patch("/resources/:id", requireActiveSession, requirePermission("resources", "manage"), requireProtectedAction, updateSecurityResource);
+router.get("/users-risk", requirePermission("users", "read"), listUsersRisk);
+router.get("/activity", requirePermission("audit", "read"), listActivity);
+router.post("/baseline/rebuild", requirePermission("baseline", "manage"), requireProtectedAction, requireActiveSession, rebuildBaseline);
+router.get("/baseline", requirePermission("baseline", "read"), getBaseline);
+router.get("/sessions", requirePermission("sessions", "read"), listSessions);
+router.get("/sessions/:sessionId/timeline", requirePermission("sessions", "read"), sessionTimeline);
+router.get("/audit", requirePermission("audit", "read"), listAudit);
+router.get("/finance/archive/backup", requirePermission("deception", "trigger"), requireProtectedAction, requireActiveSession, decoyController);
+router.get("/policies", requirePermission("policies", "read"), getPolicies);
+router.get("/responses", requirePermission("response", "read"), getAdaptiveResponses);
+router.post("/sessions/:sessionId/restrict", requireActiveSession, requirePermission("sessions", "restrict"), requireProtectedAction, restrictSession);
+router.post("/sessions/:sessionId/quarantine", requireActiveSession, requirePermission("sessions", "quarantine"), requireProtectedAction, quarantineSession);
+router.post("/sessions/:sessionId/release", requireActiveSession, requirePermission("sessions", "release"), requireProtectedAction, releaseSession);
 
 export default router;

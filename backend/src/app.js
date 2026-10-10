@@ -13,6 +13,7 @@ import workspaceRoutes from "./routes/workspace.routes.js";
 import { setupSwagger } from "./docs/swagger.js";
 import { seedDemoResources } from "./services/seed.service.js";
 import { ensureDemoUsers } from "./services/demo-seed.service.js";
+import { assertSecureProductionOrigins } from "./config/production-origins.js";
 
 const app = express();
 app.disable("x-powered-by");
@@ -27,21 +28,8 @@ const allowedOrigins = new Set(
     .filter(Boolean)
 );
 
-// Fail fast on an insecure production browser-origin allowlist. HTTPS protects
-// browser-to-API traffic; application-level payload crypto is not a substitute
-// for TLS and must not rely on a secret embedded in the frontend bundle.
-if (String(process.env.NODE_ENV || "").toLowerCase() === "production") {
-  const insecureOrigins = [...allowedOrigins].filter((origin) => {
-    try {
-      return new URL(origin).protocol !== "https:";
-    } catch {
-      return true;
-    }
-  });
-  if (insecureOrigins.length > 0) {
-    throw new Error("Production CORS_ORIGINS must contain only valid HTTPS origins.");
-  }
-}
+// Fail fast when production browser origins are malformed or not HTTPS.
+assertSecureProductionOrigins(allowedOrigins);
 
 app.use(cors({
   origin(origin, callback) {

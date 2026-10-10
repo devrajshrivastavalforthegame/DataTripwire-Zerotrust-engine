@@ -27,6 +27,22 @@ const allowedOrigins = new Set(
     .filter(Boolean)
 );
 
+// Fail fast on an insecure production browser-origin allowlist. HTTPS protects
+// browser-to-API traffic; application-level payload crypto is not a substitute
+// for TLS and must not rely on a secret embedded in the frontend bundle.
+if (String(process.env.NODE_ENV || "").toLowerCase() === "production") {
+  const insecureOrigins = [...allowedOrigins].filter((origin) => {
+    try {
+      return new URL(origin).protocol !== "https:";
+    } catch {
+      return true;
+    }
+  });
+  if (insecureOrigins.length > 0) {
+    throw new Error("Production CORS_ORIGINS must contain only valid HTTPS origins.");
+  }
+}
+
 app.use(cors({
   origin(origin, callback) {
     // Permit non-browser clients and same-origin requests without an Origin header.

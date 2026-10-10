@@ -60,11 +60,42 @@ async function request(url,options={}, {allowStepUp=true}={}){
 export const api={
   health:()=>request(API_BASE_URL+"/health"),
   login:async(payload)=>{
-    const body=await request(API_BASE_URL+"/api/v1/auth/login",{method:"POST",body:JSON.stringify(payload)});
+    let body;
+    try {
+      body=await request(API_BASE_URL+"/api/v1/auth/login",{method:"POST",body:JSON.stringify(payload)});
+    } catch(error) {
+      if(error.status===404) {
+        const diagnostic=new Error(
+          `Login endpoint not found at ${API_BASE_URL}/api/v1/auth/login. Check VITE_API_BASE_URL and confirm it points to the Node backend, not the AI service.`
+        );
+        diagnostic.status=404;
+        throw diagnostic;
+      }
+      if(error.status===401) {
+        const authError=new Error("Invalid email or password. Check the selected portal and demo credentials.");
+        authError.status=401;
+        throw authError;
+      }
+      if(error.name==="TypeError") {
+        throw new Error(
+          `Cannot reach the DataTripwire backend at ${API_BASE_URL}. Check the backend URL, availability, and CORS configuration.`
+        );
+      }
+      throw error;
+    }
+
+    if(!body || typeof body.accessToken!=="string" || !body.accessToken.trim() ||
+       !body.user || typeof body.user!=="object") {
+      throw new Error(
+        `The login service at ${API_BASE_URL} returned an unexpected response. Expected accessToken and user fields.`
+      );
+    }
+
+    // Persist credentials only after validating the login response contract.
     localStorage.setItem(AUTH_KEY,body.accessToken);
-    const raw=String(body.user?.role||"").toLowerCase();
+    const raw=String(body.user.role||"").toLowerCase();
     const labels={security_manager:"Security Manager",security_analyst:"Security Analyst",system_admin:"System Admin",manager:"Manager",employee:"Employee",auditor:"Auditor"};
-    const roles=[body.user?.role,labels[raw]].filter(Boolean);
+    const roles=[body.user.role,labels[raw]].filter(Boolean);
     const user={...body.user,roles:[...new Set(roles)]};
     localStorage.setItem("datatripwire.user.v1",JSON.stringify(user));
     return {...body,user};

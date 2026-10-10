@@ -13,6 +13,7 @@ import workspaceRoutes from "./routes/workspace.routes.js";
 import { setupSwagger } from "./docs/swagger.js";
 import { seedDemoResources } from "./services/seed.service.js";
 import { ensureDemoUsers } from "./services/demo-seed.service.js";
+import { assertSecureProductionOrigins } from "./config/production-origins.js";
 
 const app = express();
 app.disable("x-powered-by");
@@ -26,6 +27,9 @@ const allowedOrigins = new Set(
     .map((origin) => origin.trim())
     .filter(Boolean)
 );
+
+// Fail fast when production browser origins are malformed or not HTTPS.
+assertSecureProductionOrigins(allowedOrigins);
 
 app.use(cors({
   origin(origin, callback) {
